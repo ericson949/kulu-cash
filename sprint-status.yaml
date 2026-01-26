@@ -1,0 +1,70 @@
+# generated: 2026-01-26
+# project: kulu-cash
+# project_key: KULU
+# tracking_system: bmm
+# story_location: stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+generated: 2026-01-26
+project: kulu-cash
+project_key: KULU
+tracking_system: bmm
+story_location: stories
+
+development_status:
+  epic-1: in-progress
+  1-1-initialisation-chantier-vide: review
+  1-2-creation-de-mon-premier-projet: backlog
+  1-3-la-premiere-brique-market-numpad: backlog
+  1-4-leclosion-de-kulu: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-le-moteur-type-b-algorithme-hebdo: backlog
+  2-2-dashboard-de-construction-ma-part: backlog
+  2-3-historique-recu-whatsapp: backlog
+  2-4-kulus-smart-hint-auto-fill: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-capture-de-preuve-screenshot: backlog
+  3-2-la-galerie-des-briques-polaroids: backlog
+  3-3-les-etats-de-kulu-strike-glory: backlog
+  3-4-polissage-sensoriel-total: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-inscription-whatsapp-otp: backlog
+  4-2-migration-sable-rocher: backlog
+  4-3-indicateur-de-synchro-cloud: backlog
+  4-4-le-message-du-rocher-conversion: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-invitation-duo-deeplink: backlog
+  5-2-duo-pulse-presence: backlog
+  5-3-veto-requete-proof-limite: backlog
+  5-4-flamme-duo-shared-streaks: backlog
+  5-5-social-push-notifications: backlog
+  epic-5-retrospective: optional
