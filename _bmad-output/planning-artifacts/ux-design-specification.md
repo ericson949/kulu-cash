@@ -1,7 +1,9 @@
----
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-inputDocuments: ["prd.md", "architecture.md", "product-brief-kulu-cash-2026-01-26.md"]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 workflowType: 'ux-design'
+lastStep: 14
+status: 'complete'
+completedAt: '2026-01-26'
+inputDocuments: ["prd.md", "architecture.md", "product-brief-kulu-cash-2026-01-26.md"]
 project_name: 'kulu-cash'
 user_name: 'ericson949'
 date: '2026-01-26'
