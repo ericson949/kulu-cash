@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 inputDocuments: ["prd.md", "architecture.md", "product-brief-kulu-cash-2026-01-26.md"]
 workflowType: 'ux-design'
 project_name: 'kulu-cash'
@@ -236,3 +236,42 @@ Utilisation des couches atomiques de React Native (View, Text, Pressable) stylis
 - **Phase 1 (Core) :** Dark Theme + Market Numpad + Briques de Projet (états simples).
 - **Phase 2 (Social & Onboarding) :** Evidence Vault + Duo Pulse + Hatching Egg animation.
 - **Phase 3 (Refinement) :** Micro-animations de Kulu (Reanimated 3) + Textures PBR pour les briques.
+
+## UX Consistency Patterns
+
+### Button Hierarchy (The Soft-Touch Law)
+- **Primary Action (🧱 Poser brique) :** Bouton `Gold` plein. Déclenche une vibration haptique "Heavy" + Son "Stone impact".
+- **Secondary Action (Détails) :** Bouton `Terra Cotta` outline. Aucune animation sonore.
+- **Critical Action (Veto/Cancel) :** Bouton plat (Ghost), feedback visuel d'ombre portée au tap.
+
+### Feedback Patterns (Sensory Feedback)
+- **Success Financier :** État par défaut **"Bruyant"**. Sonnerie courte (Kulu exulte) + Vibration prolongée.
+- **Success Social (Reaction) :** Vibration courte "Light" uniquement.
+- **Erreur/Refus :** Vibration double (pulsée) + Changement d'expression faciale de Kulu instantané.
+
+### Form Patterns (Input Isolation)
+- **Saisie Numérique :** Utilisation exclusive du **Market Numpad** custom pour les montants. Le clavier système est bloqué pour éviter les latences de chargement.
+- **Saisie Texte :** Clavier système standard (uniquement pour noms de projets ou messages).
+- **Validation :** Toute saisie financière nécessite une double confirmation tactile (Tap à l'écran).
+
+### Navigation Patterns (The Project Anchor)
+- **Header Permanent :** Le projet sélectionné reste ancré en haut de l'interface (`Project Anchor`). Tap sur l'ancre pour revenir au Dashboard du projet.
+- **Contextual Back :** Le bouton retour change de forme pour devenir un bouton "Quitter Chantier" lors de la saisie d'un versement.
+
+## Responsive Design & Accessibility
+
+### Responsive Strategy (Mobile-Only MVP)
+- **Focus :** Optimisation exclusive pour **Mobile Portrait**. Pas de support Tablette/Desktop pour le MVP afin de garantir une expérience à une main parfaite.
+- **Sun-Test Protocol :** Toutes les vues critiques (Dashboard, Saisie) sont testées sous une simulation de forte luminosité.
+
+### Accessibility Strategy (WCAG AA)
+- **Contrast Control :** Utilisation de bordures blanches ou or (`Highlight`) autour des éléments grisés (veto) pour garantir leur visibilité sur fond sombre en extérieur.
+- **Visual Flash :** En complément du son et de la vibration, l'écran émet un bref flash lumineux lors de la validation d'un versement pour confirmer l'action visuellement en milieu bruyant.
+- **Touch Targets :** Respect strict du 48x48dp pour les zones interactives.
+
+### Resource & Battery Management
+- **Battery Saver Mode :** Désactivation automatique des animations Lottie et Reanimated complexes si la batterie du téléphone passe sous les 10%, préservant les fonctions financières vitales.
+
+### Implementation Guidelines
+- Utiliser les APIs `Haptics` d'Expo pour les vibrations.
+- Implémenter des `aria-labels` sur toutes les animations émotionnelles de Kulu.
