@@ -1,5 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { DirtBackground } from '../../src/shared/components/DirtBackground';
 import { Colors, Spacing, Typography } from '../../src/shared/theme/tokens';
 import { Plus } from 'lucide-react-native';
@@ -9,9 +11,14 @@ import { Plus } from 'lucide-react-native';
  * Represents the "Chantier Vide" state with the Gold FAB.
  */
 export default function DashboardScreen() {
+  const handleNewProject = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    console.log('Nouveau Projet');
+  };
+
   return (
     <DirtBackground>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>KuluCash</Text>
         </View>
@@ -26,12 +33,12 @@ export default function DashboardScreen() {
             styles.fab,
             pressed && styles.fabPressed
           ]}
-          onPress={() => console.log('Nouveau Projet')}
+          onPress={handleNewProject}
         >
           <Plus color="#000" size={24} />
           <Text style={styles.fabText}>Nouveau Projet</Text>
         </Pressable>
-      </View>
+      </SafeAreaView>
     </DirtBackground>
   );
 }

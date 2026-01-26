@@ -34,7 +34,7 @@ story_location: stories
 
 development_status:
   epic-1: in-progress
-  1-1-initialisation-chantier-vide: review
+  1-1-initialisation-chantier-vide: done
   1-2-creation-de-mon-premier-projet: backlog
   1-3-la-premiere-brique-market-numpad: backlog
   1-4-leclosion-de-kulu: backlog
