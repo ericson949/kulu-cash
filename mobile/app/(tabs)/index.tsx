@@ -37,7 +37,7 @@ export default function HomeScreen() {
              renderItem={({ item }) => (
                 <GoalCard 
                     goal={item} 
-                    onPress={() => console.log('Goal pressed:', item.id)} 
+                    onPress={() => router.push(`/goals/${item.id}`)} 
                 />
              )}
              contentContainerStyle={styles.listContent}
