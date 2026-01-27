@@ -58,9 +58,26 @@ FR15: Epic 5 - Veto
 ## Epic List
 
 ### Epic 1 : Le Nid Local (The Nest)
-*L'utilisateur découvre l'app, crée sa première tontine avec un objectif d'épargne, et pose sa première brique. Kulu éclôt dès ce premier versement.*
+*L'utilisateur découvre l'app, crée sa première tontine avec un objectif d'épargne via le Wizard, et pose sa première brique.*
 **FRs couverts :** FR1, FR2, FR7, FR13.
-**Valeur :** Gratification immédiate, pas de barrière d'inscription.
+**Valeur :** Gratification immédiate, setup sans friction.
+
+### Story 1.2 : Le Wizard de Création (Contribution-First)
+As a Bâtisseur,
+I want to set up my tontine by focusing on my contribution capacity first,
+So that I can see what I can achieve realistically.
+
+**Acceptance Criteria:**
+- **Given** I am on the "Nouvelle Tontine" Wizard
+- **Step 1 (Type):** I select "Fixe" or "Challenge" (Variable).
+- **Step 2 (Mechanics):**
+  - I choose Frequency (Day/Week/Month).
+  - I set the Brick Amount.
+  - I set Start/End Dates.
+  - If Start Date is in the past, I am prompted to enter my "Initial Balance".
+  - I see the **Total Estimated Goal** calculated automatically.
+- **Step 3 (Identity):** I can optionally add a Name/Image.
+- **Then** the Tontine is created with all financial parameters.
 
 ### Epic 2 : La Routine du Bâtisseur (Moteur & Routine)
 *Mise en place de la rigueur financière (Type B) et du cockpit analytique local.*

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, KeyboardAvoidingView, Platform, Alert, Dimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useGoalStore, GoalState } from '@/src/features/goals/domain/goal.store';
 import { Colors, Spacing, Typography } from '@/src/shared/theme/tokens';
 import { DirtBackground } from '@/src/shared/components/DirtBackground';
 import { SegmentedControl } from '@/src/shared/components/SegmentedControl';
 import { Ionicons } from '@expo/vector-icons';
-import { addWeeks, addMonths, addDays, format, isBefore, startOfDay, differenceInCalendarWeeks, differenceInCalendarMonths } from 'date-fns';
+import { addWeeks, addMonths, addDays, format, isBefore, startOfDay, differenceInCalendarWeeks, differenceInCalendarMonths, differenceInCalendarDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -27,28 +27,34 @@ export default function CreateGoalScreen() {
   // --- WIZARD STATE ---
   const [step, setStep] = useState(1); // 1: Type, 2: Mechanics, 3: Identity
 
-  // --- STEP 1: TYPE & FREQ ---
+  // --- STEP 1: TYPE ---
   const [tontineType, setTontineType] = useState<'fixed' | 'variable_b'>('fixed');
-  const [frequency, setFrequency] = useState<'weekly' | 'monthly' | 'daily'>('weekly');
-
-  // --- STEP 2: MECHANICS ---
-  const [brickAmount, setBrickAmount] = useState('');
-  const [duration, setDuration] = useState('52'); // Default
-  const [startDate, setStartDate] = useState(new Date());
   
+  // --- STEP 2: MECHANICS ---
+  const [frequency, setFrequency] = useState<'weekly' | 'monthly' | 'daily'>('weekly');
+  const [brickAmount, setBrickAmount] = useState('');
+  
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(addWeeks(new Date(), 52)); // Default ~1 year
+
+  // Date Pickers Visibility
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
   // Retroactive Logic
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isRetroactive, setIsRetroactive] = useState(false);
   const [initialBalance, setInitialBalance] = useState('');
   const [expectedBalance, setExpectedBalance] = useState(0);
+
+  // Project Association (To trigger Step 3)
+  const [linkToProject, setLinkToProject] = useState(false);
 
   // --- STEP 3: IDENTITY ---
   const [name, setName] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
-  // --- COMPUTED ---
+  // --- COMPUTED TOTAL ---
   const [computedTotal, setComputedTotal] = useState(0);
-  const [endDateDisplay, setEndDateDisplay] = useState('');
 
   // -------------------------------------------------------------------------
   // EFFECTS
@@ -59,33 +65,35 @@ export default function CreateGoalScreen() {
     const now = startOfDay(new Date());
     const start = startOfDay(startDate);
     
+    // Retroactive check
     if (isBefore(start, now)) {
         setIsRetroactive(true);
-        // Calculate expected balance
         let elapsed = 0;
         if (frequency === 'weekly') elapsed = differenceInCalendarWeeks(now, start);
         if (frequency === 'monthly') elapsed = differenceInCalendarMonths(now, start);
-        // Basic calculation for Fixed type (Type B logic to be added later if needed)
+        if (frequency === 'daily') elapsed = differenceInCalendarDays(now, start);
+
         const amt = parseInt(brickAmount || '0', 10);
-        setExpectedBalance(elapsed * amt);
+        const expected = elapsed * amt;
+        setExpectedBalance(expected);
+        // User Request: Pre-fill input with expected amount
+        setInitialBalance(expected.toString());
     } else {
         setIsRetroactive(false);
         setExpectedBalance(0);
         setInitialBalance('');
     }
 
-    // 2. Compute Total & End Date
+    // 2. Compute Total from Date Range
+    let durationCount = 0;
+    if (frequency === 'weekly') durationCount = Math.max(0, differenceInCalendarWeeks(endDate, startDate));
+    if (frequency === 'monthly') durationCount = Math.max(0, differenceInCalendarMonths(endDate, startDate));
+    if (frequency === 'daily') durationCount = Math.max(0, differenceInCalendarDays(endDate, startDate));
+    
     const amount = parseInt(brickAmount || '0', 10);
-    const dur = parseInt(duration || '0', 10);
-    setComputedTotal(amount * dur);
+    setComputedTotal(amount * durationCount);
 
-    let end = new Date(startDate);
-    if (frequency === 'weekly') end = addWeeks(end, dur);
-    if (frequency === 'monthly') end = addMonths(end, dur);
-    if (frequency === 'daily') end = addDays(end, dur);
-    setEndDateDisplay(format(end, "d MMMM yyyy", { locale: fr }));
-
-  }, [brickAmount, duration, frequency, startDate]);
+  }, [brickAmount, startDate, endDate, frequency]);
 
 
   // -------------------------------------------------------------------------
@@ -98,11 +106,21 @@ export default function CreateGoalScreen() {
     if (step === 1) {
         setStep(2);
     } else if (step === 2) {
-        if (!brickAmount || !duration) {
-             Alert.alert("Oups", "Il faut définir la brique et la durée !");
+        if (!brickAmount) {
+             Alert.alert("Oups", "Il faut définir combien tu poses !");
              return;
         }
-        setStep(3);
+        if (isBefore(endDate, startDate)) {
+             Alert.alert("Erreur Dates", "La fin ne peut pas être avant le début !");
+             return;
+        }
+        
+        if (linkToProject) {
+            setStep(3);
+        } else {
+            submitGoal(); // Skip Step 3
+        }
+
     } else if (step === 3) {
         submitGoal();
     }
@@ -113,12 +131,17 @@ export default function CreateGoalScreen() {
 
     const finalName = name.trim() || `Ma Tontine ${frequency === 'weekly' ? 'Hebdo' : 'Mensuelle'}`;
     const amountVal = parseInt(brickAmount, 10);
-    const durationVal = parseInt(duration, 10);
     const initBalVal = initialBalance ? parseInt(initialBalance, 10) : 0;
+    
+    // Calculate final duration
+    let durationVal = 0;
+    if (frequency === 'weekly') durationVal = Math.max(1, differenceInCalendarWeeks(endDate, startDate));
+    if (frequency === 'monthly') durationVal = Math.max(1, differenceInCalendarMonths(endDate, startDate));
+    if (frequency === 'daily') durationVal = Math.max(1, differenceInCalendarDays(endDate, startDate));
 
     addGoal({
       name: finalName,
-      description: `Tontine ${tontineType} ${frequency} de ${amountVal} FCFA`,
+      description: `Tontine ${tontineType === 'variable_b' ? 'Challenge' : 'Fixe'} ${frequency} de ${amountVal} FCFA`,
       targetAmount: amountVal * durationVal,
       brickAmount: amountVal,
       frequency,
@@ -132,11 +155,14 @@ export default function CreateGoalScreen() {
     router.back();
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setStartDate(selectedDate);
-    }
+  const onStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartPicker(false);
+    if (selectedDate) setStartDate(selectedDate);
+  };
+
+  const onEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndPicker(false);
+    if (selectedDate) setEndDate(selectedDate);
   };
 
   // -------------------------------------------------------------------------
@@ -145,123 +171,138 @@ export default function CreateGoalScreen() {
 
   const renderStep1_Type = () => (
     <View style={styles.stepContainer}>
-        <Text style={styles.question}>Quel type de tontine ?</Text>
-        
         <TouchableOpacity 
             style={[styles.cardSelect, tontineType === 'fixed' && styles.cardSelected]}
             onPress={() => setTontineType('fixed')}
+            activeOpacity={0.8}
         >
             <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>🧱 Fixe (Classique)</Text>
+                <Ionicons name="cube-outline" size={28} color={tontineType === 'fixed' ? Colors.primary : Colors.textSecondary} />
+                <View style={{flex: 1, marginLeft: Spacing.md}}>
+                    <Text style={styles.cardTitle}>🧱 Fixe (Classique)</Text>
+                    <Text style={styles.cardDesc}>Le même montant à chaque fois. Simple et stable.</Text>
+                </View>
                 {tontineType === 'fixed' && <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />}
             </View>
-            <Text style={styles.cardDesc}>Le même montant à chaque fois. Simple et efficace.</Text>
         </TouchableOpacity>
 
-        {/* Disabled Type B for MVP cleanliness or show as coming soon */}
         <TouchableOpacity 
-            style={[styles.cardSelect, tontineType === 'variable_b' && styles.cardSelected, { opacity: 0.5 }]}
-            onPress={() => Alert.alert("Bientôt !", "Le mode Challenge arrive bientôt.")}
-            //onPress={() => setTontineType('variable_b')}
+            style={[styles.cardSelect, tontineType === 'variable_b' && styles.cardSelected]}
+            onPress={() => setTontineType('variable_b')}
+            activeOpacity={0.8}
         >
              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>📈 Challenge (Type B)</Text>
+                <Ionicons name="trending-up-outline" size={28} color={tontineType === 'variable_b' ? Colors.primary : Colors.textSecondary} />
+                <View style={{flex: 1, marginLeft: Spacing.md}}>
+                    <Text style={styles.cardTitle}>📈 Challenge (Variable)</Text>
+                    <Text style={styles.cardDesc}>On augmente la mise progressivement. Pour les ambitieux.</Text>
+                </View>
+                {tontineType === 'variable_b' && <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />}
              </View>
-             <Text style={styles.cardDesc}>On augmente la mise chaque semaine. Pour les vrais bâtisseurs.</Text>
         </TouchableOpacity>
-
-        <Text style={styles.question} style={{marginTop: Spacing.xl}}>Quelle fréquence ?</Text>
-        <SegmentedControl 
-            options={[
-                { label: 'Hebdo', value: 'weekly' },
-                { label: 'Mensuel', value: 'monthly' }
-            ]}
-            selectedValue={frequency}
-            onValueChange={(v) => setFrequency(v as any)}
-        />
     </View>
   );
 
   const renderStep2_Mechanics = () => (
     <View style={styles.stepContainer}>
-        <Text style={styles.question}>Dates & Montants</Text>
+        
+        <Text style={styles.sectionTitle}>1. FRÉQUENCE</Text>
+        <SegmentedControl 
+            options={[
+                { label: 'Hebdo', value: 'weekly' },
+                { label: 'Mensuel', value: 'monthly' },
+                { label: 'Jour', value: 'daily' }
+            ]}
+            selectedValue={frequency}
+            onValueChange={(v) => setFrequency(v as any)}
+            style={{ marginBottom: Spacing.lg }}
+        />
 
-        {/* Date Picker Trigger */}
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <Ionicons name="calendar" size={20} color={Colors.primary} />
-            <Text style={styles.dateText}>Début : {format(startDate, "d MMMM yyyy", { locale: fr })}</Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-            <DateTimePicker
-                value={startDate}
-                mode="date"
-                display="default"
-                onChange={onDateChange}
+        <Text style={styles.sectionTitle}>2. MONTANT BRIQUE</Text>
+        <View style={styles.inputContainer}>
+            <TextInput 
+                style={styles.inputBig} 
+                placeholder="5000" 
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="numeric"
+                value={brickAmount}
+                onChangeText={setBrickAmount}
             />
+            <Text style={styles.suffix}>FCFA</Text>
+        </View>
+
+        <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>3. PÉRIODE</Text>
+        
+        {/* Dates Row */}
+        <View style={styles.row}>
+            <TouchableOpacity style={styles.dateBox} onPress={() => setShowStartPicker(true)}>
+                <Text style={styles.dateLabel}>Début</Text>
+                <Text style={styles.dateValue}>{format(startDate, "d MMM yyyy", { locale: fr })}</Text>
+            </TouchableOpacity>
+
+            <View style={{width: Spacing.md}} />
+
+            <TouchableOpacity style={styles.dateBox} onPress={() => setShowEndPicker(true)}>
+                <Text style={styles.dateLabel}>Fin</Text>
+                <Text style={styles.dateValue}>{format(endDate, "d MMM yyyy", { locale: fr })}</Text>
+            </TouchableOpacity>
+        </View>
+
+        {showStartPicker && (
+            <DateTimePicker value={startDate} mode="date" display="default" onChange={onStartDateChange} />
+        )}
+        {showEndPicker && (
+            <DateTimePicker value={endDate} mode="date" display="default" minimumDate={startDate} onChange={onEndDateChange} />
         )}
 
-        {/* Retroactive Warning */}
+        {/* Retroactive Warning Panel - Appears between dates if relevant */}
         {isRetroactive && (
             <View style={styles.retroactiveBox}>
-                <Text style={styles.retroactiveTitle}>🕰️ Tontine Rétroactive</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.xs}}>
+                    <Ionicons name="time-outline" size={18} color={Colors.secondary} />
+                    <Text style={styles.retroactiveTitle}> Tontine Rétroactive</Text>
+                </View>
                 <Text style={styles.retroactiveText}>
-                    Tu aurais déjà dû cotiser environ <Text style={{fontWeight:'bold'}}>{expectedBalance.toLocaleString()} F</Text>.
+                    Tu aurais dû cotiser ~<Text style={{fontWeight:'bold'}}>{expectedBalance.toLocaleString()} F</Text>.
                 </Text>
-                <Text style={styles.label}>Combien as-tu déjà mis de côté ?</Text>
-                <TextInput 
-                    style={styles.input} 
-                    placeholder="Ex: 50000" 
-                    placeholderTextColor={Colors.textSecondary}
-                    keyboardType="numeric"
-                    value={initialBalance}
-                    onChangeText={setInitialBalance}
-                />
+                <Text style={styles.labelInput}>Déjà en caisse ?</Text>
+                <View style={styles.miniInputContainer}>
+                     <TextInput 
+                        style={styles.miniInput} 
+                        placeholder="0" 
+                        placeholderTextColor={Colors.textSecondary}
+                        keyboardType="numeric"
+                        value={initialBalance}
+                        onChangeText={setInitialBalance}
+                    />
+                    <Text style={styles.suffixSmall}>FCFA</Text>
+                </View>
             </View>
         )}
 
-        <View style={styles.row}>
-            <View style={{flex: 1, marginRight: Spacing.md}}>
-                <Text style={styles.label}>La Brique</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput 
-                        style={styles.inputBig} 
-                        placeholder="5000" 
-                        placeholderTextColor={Colors.textSecondary}
-                        keyboardType="numeric"
-                        value={brickAmount}
-                        onChangeText={setBrickAmount}
-                    />
-                    <Text style={styles.suffix}>F</Text>
-                </View>
-            </View>
-            <View style={{flex: 1}}>
-                <Text style={styles.label}>Durée</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput 
-                        style={styles.inputBig} 
-                        placeholder="52" 
-                        placeholderTextColor={Colors.textSecondary}
-                        keyboardType="numeric"
-                        value={duration}
-                        onChangeText={setDuration}
-                    />
-                    <Text style={styles.suffix}>{frequency === 'weekly' ? 'sem.' : 'mois'}</Text>
-                </View>
-            </View>
-        </View>
-
+        {/* Total Simulation */}
         <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>OBJECTIF FINAL</Text>
+            <Text style={styles.resultLabel}>OBJECTIF TOTAL ESTIMÉ</Text>
             <Text style={styles.resultAmount}>{computedTotal.toLocaleString()} FCFA</Text>
-            <Text style={styles.resultDate}>Fin le {endDateDisplay}</Text>
         </View>
+        
+        {/* Checkbox for Step 3 */}
+        <TouchableOpacity 
+            style={styles.checkboxRow} 
+            onPress={() => setLinkToProject(!linkToProject)}
+            activeOpacity={0.8}
+        >
+            <View style={[styles.checkbox, linkToProject && styles.checkboxChecked]}>
+                {linkToProject && <Ionicons name="checkmark" size={16} color="#000" />}
+            </View>
+            <Text style={styles.checkboxLabel}>Associer un projet (Moto, Maison...) ?</Text>
+        </TouchableOpacity>
+
     </View>
   );
 
   const renderStep3_Identity = () => (
     <View style={styles.stepContainer}>
-        <Text style={styles.question}>Donne-lui une âme ✨</Text>
-        
         <Text style={styles.label}>Nom du chantier</Text>
         <TextInput 
             style={styles.input} 
@@ -269,6 +310,7 @@ export default function CreateGoalScreen() {
             placeholderTextColor={Colors.textSecondary}
             value={name}
             onChangeText={setName}
+            autoFocus
         />
 
         <Text style={styles.label} style={{marginTop: Spacing.lg}}>Choisis une image</Text>
@@ -298,12 +340,22 @@ export default function CreateGoalScreen() {
 
   return (
     <DirtBackground>
+      <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
+        
+        {/* UNIFIED HEADER */}
         <View style={styles.header}>
             <TouchableOpacity onPress={() => step > 1 ? setStep(step - 1) : router.back()} style={styles.backButton}>
                  <Ionicons name="arrow-back" size={24} color={Colors.text} />
             </TouchableOpacity>
-            <Text style={styles.title}>Étape {step}/3</Text>
+            
+            <View style={styles.headerTitleContainer}>
+                <Text style={styles.headerTitle}>Nouvelle Tontine</Text>
+            </View>
+
+            <View style={styles.stepBadge}>
+                <Text style={styles.stepText}>{step}/3</Text>
+            </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -314,8 +366,10 @@ export default function CreateGoalScreen() {
 
         <View style={styles.footerAction}>
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Text style={styles.nextButtonText}>{step === 3 ? "Lancer le Chantier 🚀" : "Continuer"}</Text>
-                {step < 3 && <Ionicons name="arrow-forward" size={20} color="#000" style={{marginLeft: 8}} />}
+                <Text style={styles.nextButtonText}>
+                    {step === 3 || (!linkToProject && step === 2) ? "Lancer le Chantier 🚀" : "Continuer"}
+                </Text>
+                {step < 3 && (linkToProject || step === 1) && <Ionicons name="arrow-forward" size={20} color="#000" style={{marginLeft: 8}} />}
             </TouchableOpacity>
         </View>
 
@@ -328,34 +382,46 @@ const styles = StyleSheet.create({
   scrollContent: {
       paddingHorizontal: Spacing.xl,
       paddingBottom: 120, // Space for footer
+      paddingTop: Spacing.md,
   },
   header: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: Spacing.xl,
       paddingTop: 60,
-      marginBottom: Spacing.lg,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   backButton: {
       marginRight: Spacing.md,
       padding: Spacing.xs,
   },
-  title: {
-      fontSize: 20,
+  headerTitleContainer: {
+      flex: 1,
+      alignItems: 'center',
+  },
+  headerTitle: {
+      fontSize: 18,
       fontWeight: 'bold',
       color: Colors.text,
       fontFamily: Typography.heading,
+  },
+  stepBadge: {
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+  },
+  stepText: {
+      color: Colors.primary,
+      fontWeight: 'bold',
+      fontSize: 14,
   },
   stepContainer: {
-     gap: Spacing.lg,
+     gap: Spacing.md,
   },
-  question: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: Colors.text,
-      marginBottom: Spacing.md,
-      fontFamily: Typography.heading,
-  },
+  
   // CARD SELECT
   cardSelect: {
       backgroundColor: Colors.surface,
@@ -371,73 +437,148 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Spacing.sm,
+      alignItems: 'flex-start',
   },
   cardTitle: {
       fontSize: 18,
       fontWeight: 'bold',
       color: Colors.text,
+      marginBottom: 4,
   },
   cardDesc: {
       fontSize: 14,
       color: Colors.textSecondary,
       lineHeight: 20,
   },
-  // DATE BTN
-  dateButton: {
+
+  // SECTION TITLES
+  sectionTitle: {
+      color: Colors.textSecondary,
+      fontSize: 12,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: Spacing.xs,
+      marginLeft: Spacing.xs,
+  },
+
+  // DATE BOXES
+  row: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      padding: Spacing.md,
+  },
+  dateBox: {
+      flex: 1,
+      backgroundColor: 'rgba(255,255,255,0.05)',
       borderRadius: 12,
-      alignSelf: 'flex-start',
+      padding: Spacing.md,
+      alignItems: 'center',
   },
-  dateText: {
-      color: Colors.text,
-      fontWeight: '600',
-      marginLeft: Spacing.sm,
+  dateLabel: {
+      color: Colors.textSecondary,
+      fontSize: 12,
+      marginBottom: 4,
   },
+  dateValue: {
+      color: Colors.primary,
+      fontWeight: 'bold',
+      fontSize: 16,
+  },
+
   // RETROACTIVE
   retroactiveBox: {
-      backgroundColor: 'rgba(211, 84, 0, 0.1)',
-      borderColor: Colors.secondary,
+      backgroundColor: 'rgba(211, 84, 0, 0.1)', // Terracotta tint
+      borderColor: 'rgba(211, 84, 0, 0.3)',
       borderWidth: 1,
-      borderRadius: 12,
+      borderRadius: 16,
       padding: Spacing.md,
-      marginVertical: Spacing.sm,
+      marginVertical: Spacing.lg,
   },
   retroactiveTitle: {
       color: Colors.secondary,
       fontWeight: 'bold',
-      marginBottom: Spacing.xs,
+      marginLeft: Spacing.xs,
   },
   retroactiveText: {
-      color: Colors.textSecondary,
+      color: Colors.text,
       fontSize: 14,
       marginBottom: Spacing.md,
+      marginLeft: Spacing.xs,
   },
+  labelInput: {
+      color: Colors.textSecondary,
+      fontSize: 12,
+      marginBottom: Spacing.xs,
+      marginLeft: Spacing.xs,
+  },
+  miniInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.background,
+      borderRadius: 8,
+      paddingHorizontal: Spacing.md,
+      height: 44,
+  },
+  miniInput: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: 16,
+      fontWeight: 'bold',
+  },
+  suffixSmall: {
+      color: Colors.textSecondary,
+      fontSize: 14,
+      fontWeight: '600',
+  },
+
+  // CHECKBOX
+  checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: Spacing.lg,
+      padding: Spacing.sm,
+  },
+  checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: Colors.primary,
+      marginRight: Spacing.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+  },
+  checkboxChecked: {
+      backgroundColor: Colors.primary,
+  },
+  checkboxLabel: {
+      color: Colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+  },
+
   // INPUTS
   label: {
       color: Colors.textSecondary,
       fontSize: 14,
       marginBottom: Spacing.xs,
+      marginLeft: Spacing.xs,
   },
   inputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: Colors.surface,
-      borderRadius: 12,
-      paddingHorizontal: Spacing.md,
+      borderRadius: 16,
+      paddingHorizontal: Spacing.lg,
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.1)',
-      height: 56,
+      height: 64,
   },
   inputBig: {
       flex: 1,
       color: Colors.text,
-      fontSize: 20,
+      fontSize: 24,
       fontWeight: 'bold',
       fontFamily: Typography.heading,
   },
@@ -453,20 +594,18 @@ const styles = StyleSheet.create({
   },
   suffix: {
       color: Colors.textSecondary,
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: '600',
       marginLeft: Spacing.xs,
   },
-  row: {
-      flexDirection: 'row',
-  },
+
   // RESULT CARD
   resultCard: {
       backgroundColor: 'rgba(46, 204, 113, 0.1)',
       borderRadius: 20,
       padding: Spacing.lg,
       alignItems: 'center',
-      marginTop: Spacing.lg,
+      marginTop: Spacing.xl,
       borderWidth: 1,
       borderColor: Colors.accent,
   },
@@ -475,20 +614,15 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       fontSize: 12,
       marginBottom: Spacing.xs,
-      letterSpacing: 0.5,
+      letterSpacing: 1,
   },
   resultAmount: {
-      color: Colors.white,
-      fontSize: 36,
+      color: Colors.text, // Fixed: Colors.white did not exist
+      fontSize: 32,
       fontWeight: '900',
       fontFamily: Typography.heading,
-      marginBottom: Spacing.xs,
   },
-  resultDate: {
-      color: Colors.textSecondary,
-      fontSize: 14,
-      fontStyle: 'italic',
-  },
+
   // TEMPLATES
   templateList: {
       flexDirection: 'row',
@@ -526,6 +660,7 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
   },
+
   // FOOTER ACTION
   footerAction: {
       position: 'absolute',
@@ -533,7 +668,7 @@ const styles = StyleSheet.create({
       left: 0,
       right: 0,
       padding: Spacing.xl,
-      backgroundColor: Colors.background, // Should match background to cover scroll
+      backgroundColor: Colors.background, 
       borderTopWidth: 1,
       borderTopColor: 'rgba(255,255,255,0.05)',
   },

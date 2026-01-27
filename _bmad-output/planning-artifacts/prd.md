@@ -84,8 +84,8 @@ Marie verse sa part à Douala et uploade le screenshot MTN. Eric reçoit une not
 ## Functional Requirements (The Capability Contract)
 
 ### 1. Gestion des Tontines & Moteur
-- **FR1 :** Création d'une cotisation (tontine) avec un objectif d'épargne associé (nom, description, image, montant cible).
-- **FR2 :** Configuration des 3 types de tontine (Fixe, Var A, Var B).
+- **FR1 :** Création de tontine "Contribution-First" (Wizard 3 étapes : Type > Mécanique > Identité). Support des échéances rétroactives.
+- **FR2 :** Configuration des types de tontine : "Fixe" (Classique) et "Challenge" (Variable Type B).
 - **FR3 :** Calcul auto du calendrier Type B (Progression arithmétique).
 - **FR4 :** Gestion des sur-cotisations (Bonus) et paiements partiels (Karma Penalty).
 - **FR5 :** Détection automatique des retards sur solde total projeté.

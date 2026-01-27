@@ -80,7 +80,8 @@ Structure basée sur **Expo Router** (App Directory), favorisant une séparation
 ## Core Architectural Decisions
 
 ### Data Architecture
-- **Modeling Approach :** Relationnel (via SQLite). Chaque cotisation est liée à un objectif d'épargne et à un utilisateur.
+- **Modeling Approach :** Relationnel (via SQLite/Zustand Persist).
+    - **SavingsGoal :** Modèle enrichi (`frequency`, `duration`, `startDate`, `tontineType`, `initialBalance`). Le `targetAmount` est calculé dynamiquement.
 - **Duo Sync Logic :** Flux de cotisations indépendants. Le **Solde Total** est un champ calculé et **stocké de manière partagée** sur Firebase pour une visibilité immédiate sans recalcul coûteux côté client lors du premier chargement.
 - **Media Management :** Utilisation de Firebase Storage pour les preuves. Système de génération de **miniatures (thumbnails)** pour optimiser l'affichage du Dashboard.
 
