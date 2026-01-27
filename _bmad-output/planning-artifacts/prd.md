@@ -43,7 +43,7 @@ KuluCash est un "Cockpit Financier" local-first conçu pour l'Afrique Centrale, 
 - **Moteur Tontine :** Types Fixe, A (Minimum) et B (Cumulative/Arithmétique).
 - **Dashboard Hybride :** Vue visuelle (Carte Kulu) + Vue analytique chiffrée.
 - **Duo Trust :** Validation optimiste (valide par défaut) + Veto du partenaire + Preuves visuelles.
-- **Addiction Loop :** Streaks 🔥, Évolution visuelle des projets, Rare Kulu Moments 🎲.
+- **Addiction Loop :** Streaks 🔥, Évolution visuelle des objectifs, Rare Kulu Moments 🎲.
 
 ### Phase 2 : Growth (Échelle)
 - **Skins & Collections :** Personnalisation avancée de Kulu.
@@ -57,10 +57,10 @@ KuluCash est un "Cockpit Financier" local-first conçu pour l'Afrique Centrale, 
 ## User Journeys
 
 ### 📝 Solo au Marché (Efficacité Offline)
-Eric, au marché de Mokolo (zéro réseau). Il vient de verser 15 000 FCFA. Il ouvre KuluCash, saisit le montant instantanément. Le moteur local calcule le nouveau solde Type B. Kulu apparaît ("Kulu Marchand") pour le féliciter. Eric range son téléphone en 10 secondes, serein.
+Eric, au marché de Mokolo (zéro réseau). Il vient de verser 15 000 FCFA pour sa tontine. Il ouvre KuluCash, saisit le montant instantanément. Le moteur local calcule le nouveau solde Type B. Kulu apparaît ("Kulu Marchand") pour le féliciter. Eric range son téléphone en 10 secondes, serein.
 
 ### 📝 Duo de Confiance (Collaboration Optimiste)
-Marie verse sa part à Douala et uploade le screenshot MTN. Eric reçoit une notification. La transaction est **valide par défaut** (Optimistic). Eric consulte la preuve plus tard et confirme. Les deux Kulu avancent ensemble vers leur projet "Mariage" sans bloquer le workflow.
+Marie verse sa part à Douala et uploade le screenshot MTN. Eric reçoit une notification. La transaction est **valide par défaut** (Optimistic). Eric consulte la preuve plus tard et confirme. Les deux Kulu avancent ensemble vers leur objectif commun "Mariage" sans bloquer le workflow.
 
 ## Domain & Innovation Requirements
 
@@ -77,29 +77,30 @@ Marie verse sa part à Douala et uploade le screenshot MTN. Eric reçoit une not
 
 ## Mobile App Technical Requirements
 - **Framework :** React Native (iOS & Android).
-- **Persistence :** Local DB ultra-rapide (WatermelonDB/SQLite) avec Lazy Loading des images.
+- **Persistence :** Local DB ultra-rapide (SQLite) avec Lazy Loading des images.
 - **Push :** Firebase Cloud Messaging (FCM) pour les rappels et les alertes Duo.
 - **Stores :** Conformité totale aux directives financières Apple/Google.
 
 ## Functional Requirements (The Capability Contract)
 
 ### 1. Gestion des Tontines & Moteur
-- **FR1 :** Configuration des 3 types (Fixe, Var A, Var B).
-- **FR2 :** Calcul auto du calendrier Type B (Progression arithmétique).
-- **FR3 :** Gestion des sur-cotisations (Bonus) et paiements partiels (Karma Penalty).
-- **FR4 :** Détection automatique des retards sur solde total projeté.
+- **FR1 :** Création d'une cotisation (tontine) avec un objectif d'épargne associé (nom, description, image, montant cible).
+- **FR2 :** Configuration des 3 types de tontine (Fixe, Var A, Var B).
+- **FR3 :** Calcul auto du calendrier Type B (Progression arithmétique).
+- **FR4 :** Gestion des sur-cotisations (Bonus) et paiements partiels (Karma Penalty).
+- **FR5 :** Détection automatique des retards sur solde total projeté.
 
-### 2. Dashboard & Projets
-- **FR5 :** Création de projets liés aux tontines (Progression visuelle par pierres).
-- **FR6 :** Accès offline intégral aux données et états de synchro.
+### 2. Dashboard & Visualisation
+- **FR6 :** Dashboard principal avec progression visuelle de l'objectif (par "briques" de versement).
+- **FR7 :** Accès offline intégral aux données et états de synchro.
 
 ### 3. Duo Trust Flow
-- **FR7 :** Invitation par QR Code/Lien et gestion des rôles (Participant/Observer).
-- **FR8 :** Stockage et visualisation des preuves de versement avec horodatage.
+- **FR8 :** Invitation par QR Code/Lien et gestion des rôles (Participant/Observer).
+- **FR9 :** Stockage et visualisation des preuves de versement avec horodatage.
 
 ### 4. Gamification & Tone
-- **FR9 :** Calcul des Streaks 🔥 et déclenchement aléatoire de Rare Moments.
-- **FR10 :** Adaptation dynamique du ton de Kulu (Félicitations vs Insolence).
+- **FR10 :** Calcul des Streaks 🔥 et déclenchement aléatoire de Rare Moments.
+- **FR11 :** Adaptation dynamique du ton de Kulu (Félicitations vs Insolence).
 
 ## Non-Functional Requirements (Performance & Security)
 - **NFR1 (Performance) :** Ouverture de l'app et disponibilité de saisie en < 2s.

@@ -80,13 +80,13 @@ Structure basée sur **Expo Router** (App Directory), favorisant une séparation
 ## Core Architectural Decisions
 
 ### Data Architecture
-- **Modeling Approach :** Relationnel (via WatermelonDB). Chaque cotisation est liée à un projet et à un utilisateur.
+- **Modeling Approach :** Relationnel (via SQLite). Chaque cotisation est liée à un objectif d'épargne et à un utilisateur.
 - **Duo Sync Logic :** Flux de cotisations indépendants. Le **Solde Total** est un champ calculé et **stocké de manière partagée** sur Firebase pour une visibilité immédiate sans recalcul coûteux côté client lors du premier chargement.
 - **Media Management :** Utilisation de Firebase Storage pour les preuves. Système de génération de **miniatures (thumbnails)** pour optimiser l'affichage du Dashboard.
 
 ### Authentication & Security
 - **Auth Method :** Firebase Auth (Email/OTP).
-- **Offline Security :** Middleware de **verrouillage biométrique** (Local Authentication Expo) indépendant de la connexion réseau. Accès aux données locales WatermelonDB protégé par ce verrou.
+- **Offline Security :** Middleware de **verrouillage biométrique** (Local Authentication Expo) indépendant de la connexion réseau. Accès aux données locales protégé par ce verrou.
 - **Audit Logging :** Chaque transaction enregistre le `device_id` et le `timestamp` serveur pour l'immuabilité financière.
 
 ### Frontend Architecture
@@ -102,12 +102,12 @@ Structure basée sur **Expo Router** (App Directory), favorisant une séparation
 ## Implementation Patterns & Consistency Rules
 
 ### Strategic Architecture Patterns
-- **Domain-Driven Design (DDD) :** Organisation globale autour des domaines métier (Tontine, Profile, Gamification). Utilisation d'un langage omniprésent clair pour les entités (ex: `Installment`, `Project`, `Streak`).
-- **Architecture Hexagonale (Ports & Adapteurs) :** Application par scope (feature). Le cœur métier (Domain/Logic) est isolé des frameworks (React Native) et des infrastructures (WatermelonDB, Firebase).
-- **CQRS-lite (Command Query Responsibility Segregation) :** Séparation stricte de la logique de lecture (Queries via WatermelonDB Observables) et de la logique d'écriture (Commands via Domain Services).
+- **Domain-Driven Design (DDD) :** Organisation globale autour des domaines métier (Tontine, Profile, Gamification). Utilisation d'un langage omniprésent clair pour les entités (ex: `Installment`, `Tontine`, `Streak`).
+- **Architecture Hexagonale (Ports & Adapteurs) :** Application par scope (feature). Le cœur métier (Domain/Logic) est isolé des frameworks (React Native) et des infrastructures (LocalDB, Firebase).
+- **CQRS-lite (Command Query Responsibility Segregation) :** Séparation stricte de la logique de lecture (Queries) et de la logique d'écriture (Commands via Domain Services).
 
 ### Naming & Structural Patterns
-- **Database (WatermelonDB) :** `snake_case` pour les tables et colonnes.
+- **Database (LocalDB) :** `snake_case` pour les tables et colonnes.
 - **Code (React Native) :** `PascalCase` pour les composants et types, `camelCase` pour les fonctions et instances.
 - **File Organization :** 
     - `src/features/[domain]/` : Structure hexagonale interne (domain, application, infrastructure).
@@ -117,12 +117,12 @@ Structure basée sur **Expo Router** (App Directory), favorisant une séparation
 ### Data & Communication
 - **Immuabilité :** Les objets du domaine sont immuables. Toute modification produit une nouvelle instance (ou passe par les Commands CQRS).
 - **Formats :** Dates en `ISO 8601`, montants en `Integers` (centimes).
-- **Event-Driven UI :** L'UI réagit aux flux de données (Observables) sans déclencher de modification directe de l'état global en dehors des Commands.
+- **Event-Driven UI :** L'UI réagit aux flux de données sans déclencher de modification directe de l'état global en dehors des Commands.
 
 ### Enforcement Guidelines
 **Tous les Agents IA DOIVENT :**
 1. Valider que toute nouvelle règle métier est placée dans la couche `domain` de l'hexagone concerné.
-2. Utiliser obligatoirement les adapters pour interagir avec WatermelonDB ou Firebase.
+2. Utiliser obligatoirement les adapters pour interagir avec la base de données locale ou Firebase.
 3. Ne jamais inclure de logique de calcul financier complexe directement dans les composants React.
 
 ## Project Structure & Boundaries
@@ -133,10 +133,10 @@ Structure basée sur **Expo Router** (App Directory), favorisant une séparation
 kulu-cash/
 ├── src/
 │   ├── features/              # Un hexagone par domaine (DDD)
-│   │   ├── tontine/           # Domaine Tontine (Moteur de calcul)
-│   │   │   ├── domain/        # Entités, Logic, Formula immuables
+│   │   ├── tontine/           # Domaine Tontine (Moteur de calcul & Objectif)
+│   │   │   ├── domain/        # Entités (Tontine, SavingGoal), Logic, Formula immuables
 │   │   │   ├── application/   # Commands (Write), Queries (Read)
-│   │   │   ├── infrastructure/ # Adapters (WatermelonDB, Sync)
+│   │   │   ├── infrastructure/ # Adapters (LocalDB, Sync)
 │   │   │   └── presentation/  # Components/Screens spécifiques
 │   │   ├── gamification/      # Domaine Kulu (Streaks, Moods)
 │   │   ├── duo/               # Domaine Trust (Veto, Proofs)
@@ -157,7 +157,7 @@ kulu-cash/
 Toute modification de l'état financier (cotisation, modification de solde) doit être instanciée via un objet de domaine immuable dans la couche `domain` de la feature concernée. Les agents ne sont pas autorisés à manipuler les magasins de données sans passer par un service applicatif.
 
 **Reading Boundary (CQRS-lite) :**
-Pour des performances maximales (UX réactive), les composants de présentation peuvent s'abonner directement aux Observables fournis par WatermelonDB. Cependant, pour les agrégats complexes (ex: solde total projeté), ils doivent passer par la couche `api/` partagée.
+Pour des performances maximales (UX réactive), les composants de présentation peuvent s'abonner directement aux Observables fournis par la base de données locale. Cependant, pour les agrégats complexes (ex: solde total projeté), ils doivent passer par la couche `api/` partagée.
 
 **Infrastructure Isolation :**
 Firestore et FCM sont encapsulés dans des adapteurs d'infrastructure. Aucun code applicatif ne doit dépendre directement des SDK Firebase en dehors des adapteurs.
@@ -173,13 +173,13 @@ Firestore et FCM sont encapsulés dans des adapteurs d'infrastructure. Aucun cod
 ## Architecture Validation Results
 
 ### Coherence Validation ✅
-- **Decision Compatibility :** Le combo **Expo + WatermelonDB + Firebase** est parfaitement compatible. L'utilisation des Config Plugins EAS permet d'intégrer les modules natifs sans dégrader l'expérience de build.
-- **Pattern Consistency :** Le **CQRS-lite** exploite nativement les Observables de WatermelonDB pour les vues réactives, tandis que le **DDD** sécurise les invariants financiers.
+- **Decision Compatibility :** Le combo **Expo + SQLite + Firebase** est parfaitement compatible. L'utilisation des Config Plugins EAS permet d'intégrer les modules natifs sans dégrader l'expérience de build.
+- **Pattern Consistency :** Le **CQRS-lite** exploite nativement les Observables pour les vues réactives, tandis que le **DDD** sécurise les invariants financiers.
 - **Structure Alignment :** L'organisation **Hexagonale** par feature assure une isolation totale du métier vis-à-vis des frameworks.
 
 ### Requirements Coverage Validation ✅
 - **Engine Type B (FR2) :** Entièrement supporté par la couche `domain` isolée.
-- **Sync Duo (FR13-FR14) :** Adressé par la double couche WatermelonDB (local) + Firebase (shared totals).
+- **Sync Duo (FR13-FR14) :** Adressé par la double couche LocalDB (local) + Firebase (shared totals).
 - **Sécurité (NFR4) :** Intégrée via le middleware biométrique au démarrage.
 
 ### Implementation Readiness Validation ✅
@@ -194,9 +194,9 @@ Firestore et FCM sont encapsulés dans des adapteurs d'infrastructure. Aucun cod
 **Key Strengths :**
 - Isolation forte du moteur financier (testable unitairement sans UI).
 - Synchronisation asynchrone robuste (pas de conflits d'écriture Duo).
-- Performance visuelle instantanée grâce à la réactivité native de WatermelonDB.
+- Performance visuelle instantanée grâce à la réactivité native de la base locale.
 
 ### AI Agent Guidelines
 - Respecter strictement l'immuabilité des entités dans `src/features/*/domain`.
-- Ne jamais accéder à WatermelonDB directement depuis un composant React (utiliser les Queries applicatives).
+- Ne jamais accéder à la base de données directement depuis un composant React (utiliser les Queries applicatives).
 - Chaque Command (Write) doit passer par un service de domaine validant les règles métiers.

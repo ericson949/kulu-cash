@@ -13,21 +13,21 @@ This document provides the complete epic and story breakdown for kulu-cash, deco
 
 ### Functional Requirements
 
-- **FR1:** Auth Firebase (OTP WhatsApp / Google / Apple).
-- **FR2:** Moteur de tontine Type B (Progression arithmétique hebdomadaire).
-- **FR3:** Création de projet local (Nom, Cible, Montant brique).
-- **FR4:** Dashboard avec progression visuelle.
-- **FR5:** Saisie de versement (Numpad custom).
-- **FR6:** Upload de preuve (Screenshot/Photo).
-- **FR7:** Historique des versements.
-- **FR8:** Calcul automatique du reste à payer.
-- **FR9:** Mode Duo (Invitation via DeepLink).
-- **FR10:** Synchronisation asynchrone (WatermelonDB + Firebase).
-- **FR11:** Système de Veto Duo.
-- **FR12:** Reactions Emoji sur les briques.
-- **FR13:** Système de Streaks (Addiction positive).
-- **FR14:** Mascotte Kulu (États émotionnels dynamique).
-- **FR15:** Gestion des notifications Push ("Kulu a faim").
+- **FR1:** Création d'une cotisation (tontine) avec un objectif d'épargne associé (nom, description, image, montant cible).
+- **FR2:** Configuration des 3 types de tontine (Fixe, Var A, Var B).
+- **FR3:** Calcul auto du calendrier Type B (Progression arithmétique).
+- **FR4:** Gestion des sur-cotisations (Bonus) et paiements partiels (Karma Penalty).
+- **FR5:** Détection automatique des retards sur solde total projeté.
+- **FR6:** Dashboard principal avec progression visuelle de l'objectif (par "briques" de versement).
+- **FR7:** Accès offline intégral aux données et états de synchro.
+- **FR8:** Invitation par QR Code/Lien et gestion des rôles (Participant/Observer).
+- **FR9:** Stockage et visualisation des preuves de versement avec horodatage.
+- **FR10:** Calcul des Streaks 🔥 et déclenchement aléatoire de Rare Moments.
+- **FR11:** Adaptation dynamique du ton de Kulu (Félicitations vs Insolence).
+- **FR12:** Auth Firebase (OTP WhatsApp / Google / Apple).
+- **FR13:** Saisie de versement (Numpad custom).
+- **FR14:** Historique des versements.
+- **FR15:** Système de Veto Duo.
 
 ### NonFunctional Requirements
 
@@ -37,43 +37,34 @@ This document provides the complete epic and story breakdown for kulu-cash, deco
 - **NFR4:** Ergonomie Marché (Boutons géants, contraste soleil).
 - **NFR5:** Économie de batterie (Thème sombre par défaut).
 
-### Additional Requirements
-
-- **Starter Template:** Expo (Latest) avec WatermelonDB et Firebase Config Plugins.
-- **Architecture:** Hexagonale par feature (`src/features/*/domain|application|presentation|infrastructure`).
-- **Patterns:** DDD pour le moteur de tontine, CQRS-lite (WatermelonDB Observables).
-- **UX Assets:** Mascotte Kulu, Œuf d'or (Lottie), Market Numpad, Evidence Vault.
-- **Anim :** React Native Reanimated 3 pour les briques physiques.
-- **Phase 3 (Refinement) :** Micro-animations de Kulu (Reanimated 3) + Textures PBR pour les briques.
-
 ### FR Coverage Map
 
-FR1: Epic 4 - WhatsApp OTP (Paid Gateway)
-FR2: Epic 2 - Moteur Type B logic
-FR3: Epic 1 - Local Project Creation
-FR4: Epic 2 - Visual Dashboard
-FR5: Epic 1 - Market Numpad (First Deposit)
-FR6: Epic 3 - Proof Upload (Screenshot)
-FR7: Epic 2 - History View
-FR8: Epic 2 - Auto-fill logic
-FR9: Epic 5 - Invitation Duo (Premium)
-FR10: Epic 4 - Firebase Cloud Sync (Premium)
-FR11: Epic 5 - Veto Logic
-FR12: Epic 5 - Emoji Reactions
-FR13: Epic 5 - Streak System
-FR14: Epic 3 - Kulu Dynamic Moods
-FR15: Epic 5 - Push Notifications
+FR1: Epic 1 - Création de la Tontine
+FR2: Epic 1 - Création de la Tontine
+FR3: Epic 2 - Moteur Type B
+FR4: Epic 2 - Moteur Type B
+FR5: Epic 3 - Humeurs de Kulu
+FR6: Epic 2 - Dashboard
+FR7: Epic 1 & 4 - Local First & Sync
+FR8: Epic 5 - Invitations
+FR9: Epic 3 - Preuves Visuelles
+FR10: Epic 5 - Streaks
+FR11: Epic 3 - Humeurs de Kulu
+FR12: Epic 4 - Auth
+FR13: Epic 1 - Premier Versement
+FR14: Epic 2 - Historique
+FR15: Epic 5 - Veto
 
 ## Epic List
 
 ### Epic 1 : Le Nid Local (The Nest)
-*L'utilisateur découvre l'app, crée un projet localement et pose sa première brique. Kulu éclôt dès ce premier versement.*
-**FRs couverts :** FR3 (Projet), FR5 (Numpad).
+*L'utilisateur découvre l'app, crée sa première tontine avec un objectif d'épargne, et pose sa première brique. Kulu éclôt dès ce premier versement.*
+**FRs couverts :** FR1, FR2, FR7, FR13.
 **Valeur :** Gratification immédiate, pas de barrière d'inscription.
 
 ### Epic 2 : La Routine du Bâtisseur (Moteur & Routine)
 *Mise en place de la rigueur financière (Type B) et du cockpit analytique local.*
-**FRs couverts :** FR2 (Type B), FR4 (Dashboard), FR7 (History), FR8 (Auto-fill).
+**FRs couverts :** FR3, FR4, FR6, FR14.
 **Valeur :** Utilité financière réelle et répétitive.
 
 **Goal:** Établir une discipline financière rigoureuse via le moteur de calcul et un cockpit analytique local permettant de visualiser son mur monter.
@@ -81,21 +72,21 @@ FR15: Epic 5 - Push Notifications
 ### Story 2.1 : Le Moteur Type B (Algorithme Hebdo)
 As a Bâtisseur,
 I want the app to calculate my weekly dues automatically,
-So that I never have to guess how much I owe to my project.
+So that I never have to guess how much I owe for my tontine.
 
 **Acceptance Criteria:**
-- **Given** a project with a start date and a brick amount
+- **Given** a tontine with a start date and a brick amount
 - **When** the week changes (every Monday 00:00)
 - **Then** the engine calculates the new "Amount Due" for the current week
 - **And** it handles the arithmetic progression as per the Type B specification.
 
 ### Story 2.2 : Dashboard de Construction (Ma Part)
 As a Bâtisseur,
-I want to see my brick wall grow and a teaser of the Duo mode,
-So that I feel motivated to keep building and eventually sync with a partner.
+I want to see my brick wall grow for my saving goal,
+So that I feel motivated to keep building.
 
 **Acceptance Criteria:**
-- **Given** I have multiple deposits (bricks)
+- **Given** I have multiple deposits (bricks) for a tontine
 - **When** I open the Dashboard
 - **Then** I see the bricks stacked physically on top of each other (Construction site vibe)
 - **And** a "Duo Mode" zone is visible but greyed out/locked with a "Bientôt disponible" label.
@@ -106,7 +97,7 @@ I want to consult the list of my payments and share a text receipt,
 So that I can manually prove my honesty to my future partner.
 
 **Acceptance Criteria:**
-- **Given** I am on the project screen
+- **Given** I am on the tontine screen
 - **When** I navigate to "Historique"
 - **Then** I see a clean list (Date, Heure, Montant)
 - **And** each entry has a "Partager reçu (Text)" button that opens WhatsApp with a pre-filled message ("Eric a posé une brique de 15 000 FCFA sur KuluCash !").
@@ -144,7 +135,7 @@ So that I can see the history of my work as a photo album.
 
 **Acceptance Criteria:**
 - **Given** I have multiple bricks with photos
-- **When** I open the project gallery
+- **When** I open the tontine gallery
 - **Then** the proofs are displayed as swipable 'Polaroids'
 - **And** I can see the amount and date attached to each photo.
 
@@ -154,7 +145,7 @@ I want Kulu to reflect my financial status visually,
 So that I feel immediate pride or healthy guilt.
 
 **Acceptance Criteria:**
-- **Given** a project status (Late vs Up-to-date vs Over-performing)
+- **Given** a tontine status (Late vs Up-to-date vs Over-performing)
 - **When** the Dashboard loads
 - **Then** Kulu shows one of 4 states:
   - **Neutre :** Construction normale.
@@ -175,15 +166,15 @@ So that the app feels high-premium and alive.
 
 ## Epic 4 : La Porte d'Or (Auth & Backup)
 
-**Goal:** Sécuriser le projet de l'utilisateur par une sauvegarde Cloud et initier le modèle économique (1er projet offert).
+**Goal:** Sécuriser les données de l'utilisateur par une sauvegarde Cloud et initier le modèle économique.
 
 ### Story 4.1 : Inscription WhatsApp OTP
 As a Bâtisseur,
-I want to link my project to my WhatsApp phone number,
+I want to link my tontines to my WhatsApp phone number,
 So that I can retrieve my data if I change my phone.
 
 **Acceptance Criteria:**
-- **Given** I am in the "Secure my project" flow
+- **Given** I am in the "Secure my data" flow
 - **When** I enter my phone number
 - **Then** I receive a 6-digit OTP via WhatsApp
 - **And** validating the OTP creates my Firebase account.
@@ -191,14 +182,14 @@ So that I can retrieve my data if I change my phone.
 ### Story 4.2 : Migration (Sable -> Rocher)
 As a Bâtisseur,
 I want my local data to be synchronized with the cloud automatically,
-So that my project is never lost.
+So that my tontines are never lost.
 
 **Acceptance Criteria:**
 - **Given** I just created an account
 - **When** the first sync starts
-- **Then** my local WatermelonDB data is pushed to Firebase
+- **Then** my local data is pushed to Firebase
 - **And** Kulu's egg/avatar glows blue to signal the cloud protection.
-- **Note:** The first project (Tontine) sync is free.
+- **Note:** The first tontine sync is free.
 
 ### Story 4.3 : Indicateur de Synchro Cloud
 As a Bâtisseur,
@@ -217,10 +208,10 @@ I want Kulu to explain the benefit of a premium account,
 So that I understand the value of paying for subsequent backups.
 
 **Acceptance Criteria:**
-- **Given** I have an unsecure local project
+- **Given** I have an unsecure local tontine
 - **When** Kulu speaks to me after a deposit
 - **Then** he uses the "Rock vs Sand" metaphor: "Mon frère, ton chantier est magnifique, mais il est sur du sable ! Veux-tu le mettre sur le Rocher (Cloud) ?"
-- **And** tapps the dialogue leads to the Auth/Premium landing.
+- **And** tapping the dialogue leads to the Auth/Premium landing.
 
 ## Epic 5 : Le Pont Social (Mode Duo)
 
@@ -229,21 +220,21 @@ So that I understand the value of paying for subsequent backups.
 ### Story 5.1 : Invitation Duo (DeepLink)
 As a Bâtisseur,
 I want to invite my partner via a WhatsApp link,
-So that we can build our project together.
+So that we can build our tontine together.
 
 **Acceptance Criteria:**
-- **Given** I am a premium user (or on my first free project)
+- **Given** I am a premium user (or on my first free tontine)
 - **When** I tap "Inviter un partenaire"
 - **Then** the app generates a DeepLink and opens the WhatsApp share sheet
 - **And** the link redirects the partner directly to the App Store if they don't have the app.
 
 ### Story 5.2 : Duo Pulse (Présence)
 As a Bâtisseur,
-I want to see when my partner is online on the project,
+I want to see when my partner is online on the tontine,
 So that I feel we are on the chantier at the same time.
 
 **Acceptance Criteria:**
-- **Given** my partner has the app open on the same project
+- **Given** my partner has the app open on the same tontine
 - **When** I am on the Dashboard
 - **Then** a glowing animated halo (`Duo Pulse`) appears around their avatar
 - **And** I can see floating reactions if they send them.
@@ -251,7 +242,7 @@ So that I feel we are on the chantier at the same time.
 ### Story 5.3 : Veto & Requête Proof (Limité)
 As a Partner,
 I want to challenge a brick if I have a doubt,
-So that I can ensure the project's financial integrity.
+So that I can ensure the tontine's financial integrity.
 
 **Acceptance Criteria:**
 - **Given** a new brick posted by Eric
@@ -266,7 +257,7 @@ I want our streak to be shared and high-stakes,
 So that we motivate each other to never fail.
 
 **Acceptance Criteria:**
-- **Given** a project in Duo mode
+- **Given** a tontine in Duo mode
 - **When** one of the partners fails his weekly deposit
 - **Then** the `Shared Streak` (Flamme 🔥) is extinguished for BOTH partners.
 - **And** Kulu shows a sad/angry face to both.
@@ -274,10 +265,10 @@ So that we motivate each other to never fail.
 ### Story 5.5 : Social Push Notifications
 As a Bâtisseur,
 I want to be notified of my partner's actions,
-So that I can react and keep the project alive.
+So that I can react and keep the tontine alive.
 
 **Acceptance Criteria:**
 - **Given** Marie just posted a brick
 - **When** I am outside the app
 - **Then** I receive a push notification: "Marie a posé une brique ! 💪 Va voir le mur de briques !"
-- **And** tapping the notif opens the project dashboard.
+- **And** tapping the notif opens the tontine dashboard.

@@ -15,15 +15,17 @@ so that I can start my first project immediately.
 3. **Then** I see the "Deep Slate" background (`#1A1C1E`) with a rich "Dirt Texture" (Terre rouge)
 4. **And** a floating action button "🏗️ Nouveau Projet" is prominently visible (Gold `#FFC107`)
 5. **And** no authentication screen is shown.
-6. **And** the app is initialized with the Expo Managed Workflow (TypeScript) and WatermelonDB plugin.
+6. **And** the app is initialized with the Expo Managed Workflow (TypeScript) including native dependencies.
 
 ## Tasks / Subtasks
 
 - [x] **Task 1: Initialisation du Projet (Archi Base)** (AC: 6) <!-- id: 100 -->
   - [x] Installer le template Expo Tabs TypeScript
-  - [x] Installer les dépendances WatermelonDB
   - [x] Installer Firebase standard
-  - [x] Configurer `app.json` avec le plugin WatermelonDB.
+  - [x] Installer `lottie-react-native` et configurer pour Android/iOS
+  - [x] Installer et configurer SQLite (expo-sqlite)
+  - [x] Configurer `app.json` avec les plugins nécessaires.
+  - [x] Vérifier le build natif (`npx expo run:android` / `npx expo run:ios`).
 - [x] **Task 2: UI "Chantier Vide"** (AC: 1, 2, 3) <!-- id: 101 -->
   - [x] Créer la route principale (`app/(tabs)/index.tsx`) avec le fond Deep Slate.
   - [x] Implémenter l'overlay "Dirt Texture" (Image semi-transparente ou SVG texturé).
@@ -35,7 +37,7 @@ so that I can start my first project immediately.
 
 - **Architecture :** Respecter strictement la structure Hexagonale définie dans `architecture.md`. Les fichiers UI vont dans `src/shared/components` ou `src/features/tontine/presentation`.
 - **Styling :** Utiliser exclusivement des `StyleSheet` React Native avec les tokens du `ux-design-specification.md`.
-- **WatermelonDB :** Ce ticket ne demande pas encore de Schéma, juste l'installation et la configuration du plugin pour permettre un `eas build` réussi.
+- **Persistence :** Ce ticket ne demande pas encore de Schéma, juste l'installation et la configuration pour permettre un `eas build` réussi.
 
 ### Project Structure Notes
 
