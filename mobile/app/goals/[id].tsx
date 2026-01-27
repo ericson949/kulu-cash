@@ -11,111 +11,70 @@ import { useTransactionStore } from '@/src/features/transactions/domain/transact
 import { HistoryList } from '@/src/features/transactions/presentation/components/HistoryList';
 import * as Haptics from 'expo-haptics';
 import { KuluMascot } from '@/src/shared/components/KuluMascot';
-import { SpeechBubble } from '@/src/shared/components/SpeechBubble';
 import { ProofCaptureService } from '@/src/shared/services/proof.service';
+import { CustomActionSheet, ActionSheetOption } from '@/src/shared/components/CustomActionSheet';
+import { useState } from 'react';
 
-const { width } = Dimensions.get('window');
+// ... 
 
 export default function GoalDetailScreen() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
+  // ... existing hooks
   
-  const goal = useGoalStore((state: GoalState) => 
-    state.goals.find((g) => g.id === id)
-  );
-  
-  // Safe Selection: Select raw state, filter in render with useMemo to avoid infinite loops
-  const allTransactions = useTransactionStore((state) => state.transactions);
-  const addTransaction = useTransactionStore((state) => state.addTransaction);
+  const [isSheetVisible, setSheetVisible] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState<number>(0);
 
-  const goalTransactions = useMemo(() => {
-      if (!id) return [];
-      return allTransactions.filter(t => t.goalId === id);
-  }, [allTransactions, id]);
+  // ... existing memo calculations
 
-  // Memoize total calculation
-  const totalDeposited = useMemo(() => {
-      return goalTransactions
-        .filter(t => t.type === 'deposit')
-        .reduce((sum, t) => sum + t.amount, 0);
-  }, [goalTransactions]);
-
-  if (!goal) {
-    return (
-      <DirtBackground>
-        <View style={styles.center}>
-          <Text style={styles.errorText}>Chantier introuvable 🏗️</Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backLink}>Retour</Text>
-          </TouchableOpacity>
-        </View>
-      </DirtBackground>
-    );
-  }
-
-  // Engine Calcs
-  const currentPeriod = TontineEngine.getCurrentPeriodIndex(goal);
-  const dueAmount = TontineEngine.calculateDueForPeriod(goal.tontineType, goal.brickAmount, currentPeriod);
-  
-  // Smart Hint Logic
-  const expectedTotal = TontineEngine.calculateExpectedBalance(goal);
-  const effectiveTotal = totalDeposited + (goal.initialBalance || 0);
-  const missingAmount = Math.max(0, expectedTotal - effectiveTotal);
-
-
-  const completedBricks = goal.brickAmount > 0 ? Math.floor(effectiveTotal / goal.brickAmount) : 0;
-
-  // ... 
-
-  const triggerDeposit = (amount: number) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      
-      const confirmDeposit = (proofUri?: string) => {
-          addTransaction({
-              goalId: goal.id,
-              amount: amount,
-              date: new Date().toISOString(),
-              type: 'deposit',
-              proofUri
-          });
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      };
-
-      Alert.alert(
-          "Poser une brique ?",
-          `Confirmer le dépôt de ${amount.toLocaleString()} FCFA ?`,
-          [
-              { text: "Annuler", style: "cancel" },
-              { 
-                  text: "Sans preuve", 
-                  style: 'default',
-                  onPress: () => confirmDeposit()
-              },
-              { 
-                  text: "Avec Photo 📸", 
-                  style: 'default',
-                  onPress: async () => {
-                      const uri = await ProofCaptureService.takePhoto();
-                      if (uri) {
-                          confirmDeposit(uri);
-                      }
-                  }
-              }
-          ]
-      );
+  const confirmDeposit = (proofUri?: string) => {
+      addTransaction({
+          goalId: goal.id,
+          amount: pendingAmount,
+          date: new Date().toISOString(),
+          type: 'deposit',
+          proofUri
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
-  // Kulu Message
-  let kuluMessage = "Tout est en ordre chef ! 🏗️";
-  let isAction = false;
-  
-  if (missingAmount > 0) {
-      kuluMessage = `Il manque ${missingAmount.toLocaleString()} F pour être à jour !`;
-      isAction = true;
-  }
+  const triggerDeposit = (amount: number) => {
+     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Selection);
+     setPendingAmount(amount);
+     setSheetVisible(true);
+  };
+
+  const depositOptions: ActionSheetOption[] = [
+      {
+          label: "📸  Prendre une photo",
+          onPress: async () => {
+              const uri = await ProofCaptureService.takePhoto();
+              if (uri) confirmDeposit(uri);
+          },
+          color: Colors.text
+      },
+      {
+          label: "🖼️  Choisir depuis la galerie",
+          onPress: async () => {
+              const uri = await ProofCaptureService.pickImage();
+              if (uri) confirmDeposit(uri);
+          },
+          color: Colors.text
+      },
+      {
+          label: "⚡  Déposer sans preuve",
+          onPress: () => confirmDeposit(),
+          color: Colors.primary // Highlight "Quick" option? Or keep neutral. Let's make it primary.
+      },
+      {
+          label: "Annuler",
+          onPress: () => {},
+          isCancel: true
+      }
+  ];
 
   return (
     <DirtBackground>
+      {/* ... Existing Structure ... */}
       <Stack.Screen options={{ headerShown: false }} />
       
       {/* Header */}
@@ -187,6 +146,13 @@ export default function GoalDetailScreen() {
         <HistoryList transactions={goalTransactions} />
 
       </ScrollView>
+
+      <CustomActionSheet 
+        visible={isSheetVisible} 
+        onClose={() => setSheetVisible(false)}
+        title={`Déposer ${pendingAmount.toLocaleString()} F ?`}
+        options={depositOptions}
+      />
     </DirtBackground>
   );
 }
