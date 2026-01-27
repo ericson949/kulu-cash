@@ -11,6 +11,7 @@ import { useTransactionStore } from '@/src/features/transactions/domain/transact
 import { HistoryList } from '@/src/features/transactions/presentation/components/HistoryList';
 import * as Haptics from 'expo-haptics';
 import { KuluMascot } from '@/src/shared/components/KuluMascot';
+import { SpeechBubble } from '@/src/shared/components/SpeechBubble';
 import { ProofCaptureService } from '@/src/shared/services/proof.service';
 import { CustomActionSheet, ActionSheetOption } from '@/src/shared/components/CustomActionSheet';
 import { useState } from 'react';
@@ -66,6 +67,15 @@ export default function GoalDetailScreen() {
   const missingAmount = Math.max(0, expectedTotal - effectiveTotal);
 
   const completedBricks = goal.brickAmount > 0 ? Math.floor(effectiveTotal / goal.brickAmount) : 0;
+
+  // Kulu Message
+  let kuluMessage = "Tout est en ordre chef ! 🏗️";
+  let isAction = false;
+  
+  if (missingAmount > 0) {
+      kuluMessage = `Il manque ${missingAmount.toLocaleString()} F pour être à jour !`;
+      isAction = true;
+  }
 
   const confirmDeposit = (proofUri?: string) => {
       addTransaction({
