@@ -8,7 +8,7 @@ export interface Transaction {
   amount: number;
   date: string; // ISO String
   type: 'deposit' | 'withdrawal';
-  proofUri?: string;
+  proofUri?: string; // Local URI for Story 3.1
 }
 
 interface TransactionState {

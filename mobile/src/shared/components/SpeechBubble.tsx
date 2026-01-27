@@ -1,9 +1,14 @@
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Colors, Spacing, Typography } from '../theme/tokens';
+
 interface SpeechBubbleProps {
   message: string;
   onPress?: () => void;
   variant?: 'info' | 'action';
   placement?: 'left' | 'right';
 }
+
 
 export const SpeechBubble = ({ message, onPress, variant = 'info', placement = 'left' }: SpeechBubbleProps) => {
   return (

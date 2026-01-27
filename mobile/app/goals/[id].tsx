@@ -12,6 +12,7 @@ import { HistoryList } from '@/src/features/transactions/presentation/components
 import * as Haptics from 'expo-haptics';
 import { KuluMascot } from '@/src/shared/components/KuluMascot';
 import { SpeechBubble } from '@/src/shared/components/SpeechBubble';
+import { ProofCaptureService } from '@/src/shared/services/proof.service';
 
 const { width } = Dimensions.get('window');
 
@@ -61,25 +62,43 @@ export default function GoalDetailScreen() {
   const effectiveTotal = totalDeposited + (goal.initialBalance || 0);
   const missingAmount = Math.max(0, expectedTotal - effectiveTotal);
 
+
   const completedBricks = goal.brickAmount > 0 ? Math.floor(effectiveTotal / goal.brickAmount) : 0;
+
+  // ... 
 
   const triggerDeposit = (amount: number) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      
+      const confirmDeposit = (proofUri?: string) => {
+          addTransaction({
+              goalId: goal.id,
+              amount: amount,
+              date: new Date().toISOString(),
+              type: 'deposit',
+              proofUri
+          });
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      };
+
       Alert.alert(
           "Poser une brique ?",
           `Confirmer le dépôt de ${amount.toLocaleString()} FCFA ?`,
           [
               { text: "Annuler", style: "cancel" },
               { 
-                  text: "POSER 🧱", 
-                  onPress: () => {
-                      addTransaction({
-                          goalId: goal.id,
-                          amount: amount,
-                          date: new Date().toISOString(),
-                          type: 'deposit'
-                      });
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  text: "Sans preuve", 
+                  style: 'default',
+                  onPress: () => confirmDeposit()
+              },
+              { 
+                  text: "Avec Photo 📸", 
+                  style: 'default',
+                  onPress: async () => {
+                      const uri = await ProofCaptureService.takePhoto();
+                      if (uri) {
+                          confirmDeposit(uri);
+                      }
                   }
               }
           ]
