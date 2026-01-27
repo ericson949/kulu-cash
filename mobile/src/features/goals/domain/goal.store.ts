@@ -6,9 +6,14 @@ export interface SavingsGoal {
   id: string;
   name: string;
   description?: string;
-  targetAmount: number;
+  targetAmount: number; // Calculated: brickAmount * duration
   brickAmount: number;
-  imageUri?: string; // 'motorcycle', 'house', 'wedding', 'travel' or custom URI
+  frequency: 'daily' | 'weekly' | 'monthly';
+  duration: number; // Number of occurrences
+  startDate: string; // ISO Date String
+  imageUri?: string;
+  tontineType: 'fixed' | 'variable_b';
+  initialBalance?: number; // For retroactive goals
   createdAt: number;
 }
 

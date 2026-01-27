@@ -25,7 +25,9 @@ export const GoalCard = ({ goal, onPress }: GoalCardProps) => {
   const currentAmount = 0; 
   const progress = Math.min((currentAmount / goal.targetAmount) * 100, 100);
 
-  return (
+    const frequencyLabel = goal.frequency === 'weekly' ? 'semaine' : goal.frequency === 'monthly' ? 'mois' : 'jour';
+
+    return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
       <View style={styles.imageContainer}>
         <Image source={imageSource} style={styles.image} resizeMode="contain" />
@@ -45,7 +47,7 @@ export const GoalCard = ({ goal, onPress }: GoalCardProps) => {
                 <Text style={styles.amount}>{goal.targetAmount.toLocaleString()} FCFA</Text>
             </View>
             <View style={styles.badge}>
-                <Text style={styles.badgeText}>{goal.brickAmount.toLocaleString()} / brique</Text>
+                <Text style={styles.badgeText}>{goal.brickAmount.toLocaleString()} / {frequencyLabel}</Text>
             </View>
         </View>
         
