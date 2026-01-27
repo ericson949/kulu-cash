@@ -19,12 +19,53 @@ import { useState } from 'react';
 
 export default function GoalDetailScreen() {
   const { id } = useLocalSearchParams();
-  // ... existing hooks
+  const router = useRouter();
+  
+  const goal = useGoalStore((state: GoalState) => 
+    state.goals.find((g) => g.id === id)
+  );
   
   const [isSheetVisible, setSheetVisible] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number>(0);
+  // Safe Selection: Select raw state, filter in render with useMemo to avoid infinite loops
+  const allTransactions = useTransactionStore((state) => state.transactions);
+  const addTransaction = useTransactionStore((state) => state.addTransaction);
 
-  // ... existing memo calculations
+  const goalTransactions = useMemo(() => {
+      if (!id) return [];
+      return allTransactions.filter(t => t.goalId === id);
+  }, [allTransactions, id]);
+
+  // Memoize total calculation
+  const totalDeposited = useMemo(() => {
+      return goalTransactions
+        .filter(t => t.type === 'deposit')
+        .reduce((sum, t) => sum + t.amount, 0);
+  }, [goalTransactions]);
+
+  if (!goal) {
+    return (
+      <DirtBackground>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>Chantier introuvable 🏗️</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.backLink}>Retour</Text>
+          </TouchableOpacity>
+        </View>
+      </DirtBackground>
+    );
+  }
+
+  // Engine Calcs
+  const currentPeriod = TontineEngine.getCurrentPeriodIndex(goal);
+  const dueAmount = TontineEngine.calculateDueForPeriod(goal.tontineType, goal.brickAmount, currentPeriod);
+  
+  // Smart Hint Logic
+  const expectedTotal = TontineEngine.calculateExpectedBalance(goal);
+  const effectiveTotal = totalDeposited + (goal.initialBalance || 0);
+  const missingAmount = Math.max(0, expectedTotal - effectiveTotal);
+
+  const completedBricks = goal.brickAmount > 0 ? Math.floor(effectiveTotal / goal.brickAmount) : 0;
 
   const confirmDeposit = (proofUri?: string) => {
       addTransaction({
