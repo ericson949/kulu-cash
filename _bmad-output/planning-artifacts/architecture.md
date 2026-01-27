@@ -32,7 +32,7 @@ L'architecture doit supporter un **Moteur de Tontine (Engine)** capable de gére
 - **Estimated architectural components :** ~6 (Engine, LocalDB, SyncManager, UI/Gamification layers, Auth/Security, Notification Service).
 
 ### Technical Constraints & Dependencies
-- **Stack confirmée :** React Native, WatermelonDB/SQLite, Firebase (Firestore, FCM, Auth).
+- **Stack confirmée :** React Native (0.77+), Expo SDK 54, Firebase (Firestore, FCM, Auth).
 - **Contrainte Store :** Respect des guidelines financières Apple/Google.
 
 ### Cross-Cutting Concerns Identified
@@ -48,23 +48,20 @@ L'architecture doit supporter un **Moteur de Tontine (Engine)** capable de gére
 ### Starter Options Considered
 - **Option A : Expo Default TypeScript (Tabs) :** Le standard officiel. Offre une navigation (Expo Router) et une configuration TypeScript déjà optimisée.
 - **Option B : Boilerplates Communautaires :** Souvent trop chargés ou utilisant Supabase au lieu de Firebase.
-- **Option C : Custom Expo + WatermelonDB Plugin :** Utilisation de `create-expo-app` augmentée du plugin Morrow Digital pour le support natif de WatermelonDB dans Expo.
+- **Option C : Custom Expo + Firebase :** Utilisation de `create-expo-app` configurée pour une approche online-first avec support offline Firestore.
 
-### Selected Starter : Expo TypeScript + WatermelonDB Config Plugin
+### Selected Starter : Expo TypeScript + Firebase
 **Rationale for Selection :**
-Bien que le volume de données (max ~730 échéances par tontine) soit gérable par SQLite, **WatermelonDB** a été choisi pour son **moteur de synchronisation intégré** et sa **réactivité native**. Cela garantit une synchronisation Solo/Duo ultra-fiable avec Firebase tout en offrant une interface "instantanée" qui se met à jour automatiquement lors des changements de données (Observable pattern). L'utilisation du plugin `@morrowdigital/watermelondb-expo-plugin` permet de rester dans le flux EAS Build tout en bénéficiant de ces avantages critiques pour une application Fintech.
+L'utilisation de **Firebase** (Firestore) permet une synchronisation simple et efficace pour le MVP. Bien que moins "local-first" natif que PowerSync, Firestore offre une excellente gestion du mode hors-connexion et une intégration parfaite avec l'authentification et le stockage de fichiers, tout en restant dans l'écosystème Google familier.
 
 **Initialization Command :**
 
-```bash
 # Initialisation du projet (template navigation recommandé)
 npx create-expo-app@latest kulu-cash --template tabs-typescript
 
-# Ajout des dépendances critiques local-first
-npx expo install @nozbe/watermelondb @nozbe/with-observables
-npx expo install @morrowdigital/watermelondb-expo-plugin
+# Ajout des dépendances critiques
 npx expo install firebase
-```
+npx expo install lottie-react-native lucide-react-native
 
 ### Architectural Decisions Provided by Starter
 
@@ -94,7 +91,7 @@ Structure basée sur **Expo Router** (App Directory), favorisant une séparation
 
 ### Frontend Architecture
 - **State Management :**
-    - **Data State :** Géré nativement par les Observables de WatermelonDB pour une réactivité temps réel.
+    - **Data State :** Géré par les **Hooks Firestore** (ou Zustand pour le cache local) pour une réactivité temps réel.
     - **UI State :** Utilisation de **Zustand** (léger, hook-based) pour les états non-persistants (navigation, thèmes, humeur de Kulu).
 - **Component Pattern :** Atomic Design pour les éléments de gamification réutilisables.
 
@@ -148,8 +145,8 @@ kulu-cash/
 │   │   ├── components/        # UI Kulu Mascot Shared
 │   │   ├── theme/             # Sally's Global Theme
 │   │   └── utils/             # ISO-Dates, Money-Integers
-│   ├── api/                   # CQRS-lite Query Layer (Observables)
-│   └── database/              # Schema WatermelonDB
+│   ├── api/                   # Logic de service Firebase
+│   └── database/              # Règles de sécurité Firestore
 ├── .env                       # Firebase Keys
 └── eas.json                   # EAS Build Configuration
 ```
