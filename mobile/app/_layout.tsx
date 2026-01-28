@@ -45,15 +45,33 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+import { initializeAuthListener, useAuthStore } from '@/src/features/auth/domain/auth.service';
+
+// ... (existing imports)
+
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// ...
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
+  useEffect(() => {
+     initializeAuthListener();
+     // Silently try to sign in anonymously if not already
+     useAuthStore.getState().signInAnonymous();
+  }, []);
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="goals/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="goals/create" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

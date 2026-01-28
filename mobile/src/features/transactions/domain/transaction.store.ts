@@ -14,6 +14,7 @@ export interface Transaction {
 interface TransactionState {
   transactions: Transaction[];
   addTransaction: (t: Omit<Transaction, 'id'>) => void;
+  clearTransactions: (goalId: string) => void; // For Debug/Reset
   getTransactionsByGoal: (goalId: string) => Transaction[];
   getTotalDeposited: (goalId: string) => number;
 }
@@ -31,6 +32,10 @@ export const useTransactionStore = create<TransactionState>()(
           },
           ...state.transactions, // Newest first
         ],
+      })),
+
+      clearTransactions: (goalId) => set((state) => ({
+          transactions: state.transactions.filter(t => t.goalId !== goalId)
       })),
 
       getTransactionsByGoal: (goalId) => {

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import { Transaction } from '../../domain/transaction.store';
 import { Colors, Spacing, Typography } from '@/src/shared/theme/tokens';
 import { format } from 'date-fns';
@@ -11,6 +11,8 @@ interface HistoryListProps {
 }
 
 export const HistoryList = ({ transactions }: HistoryListProps) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   if (transactions.length === 0) {
       return (
           <View style={styles.emptyContainer}>
@@ -30,8 +32,15 @@ export const HistoryList = ({ transactions }: HistoryListProps) => {
         </View>
         
         <View style={styles.right}>
+            {/* Proof Thumbnail */}
+            {item.proofUri && (
+                <TouchableOpacity onPress={() => setSelectedImage(item.proofUri)}>
+                    <Image source={{ uri: item.proofUri }} style={styles.thumbnail} />
+                </TouchableOpacity>
+            )}
+
             <Text style={styles.amount}>+{item.amount.toLocaleString()} F</Text>
-             {/* Mock Share Button for Story 2.3 */}
+             
             <TouchableOpacity style={styles.shareBtn}>
                 <Ionicons name="share-social-outline" size={16} color={Colors.textSecondary} />
             </TouchableOpacity>
@@ -45,6 +54,24 @@ export const HistoryList = ({ transactions }: HistoryListProps) => {
         {transactions.map(t => (
             <View key={t.id}>{renderItem({item: t})}</View>
         ))}
+
+        {/* Full Screen Image Modal */}
+        <Modal visible={!!selectedImage} transparent={true} animationType="fade">
+            <View style={styles.modalContainer}>
+                <TouchableWithoutFeedback onPress={() => setSelectedImage(null)}>
+                    <View style={styles.modalBackdrop} />
+                </TouchableWithoutFeedback>
+                
+                <View style={styles.modalContent}>
+                    {selectedImage && (
+                        <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+                    )}
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedImage(null)}>
+                         <Ionicons name="close-circle" size={40} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
     </View>
   );
 };
@@ -111,5 +138,45 @@ const styles = StyleSheet.create({
   },
   shareBtn: {
       padding: 4,
+  },
+  
+  // Gallery Styles
+  thumbnail: {
+      width: 32,
+      height: 32,
+      borderRadius: 6,
+      marginRight: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.textSecondary,
+  },
+  modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.9)',
+  },
+  modalBackdrop: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+  },
+  modalContent: {
+      width: '100%',
+      height: '80%',
+      justifyContent: 'center',
+      alignItems: 'center',
+  },
+  fullImage: {
+      width: '90%',
+      height: '90%',
+      borderRadius: 12,
+  },
+  closeButton: {
+      position: 'absolute',
+      top: 20,
+      right: 20,
+      zIndex: 10,
   }
 });

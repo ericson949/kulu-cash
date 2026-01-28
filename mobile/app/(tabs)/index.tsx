@@ -1,31 +1,46 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Platform, FlatList } from 'react-native';
-import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { DirtBackground } from '@/src/shared/components/DirtBackground';
-import { Colors, Spacing, Typography } from '@/src/shared/theme/tokens';
-import { useGoalStore, GoalState } from '@/src/features/goals/domain/goal.store';
-import { GoalCard } from '@/src/features/goals/presentation/components/GoalCard';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { useTransactionStore } from '@/src/features/transactions/domain/transaction.store';
+
+// ... (existing imports)
 
 export default function HomeScreen() {
   const router = useRouter();
   const goals = useGoalStore((state: GoalState) => state.goals);
+  const deleteGoal = useGoalStore((state: GoalState) => state.deleteGoal);
+  const clearTransactions = useTransactionStore((state) => state.clearTransactions);
 
-  const handleNewProject = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    router.push('/goals/create');
+  // ... (handleSync, handleNewProject, renderHeader, renderEmptyState)
+
+  const handleDeleteGoal = (goalId: string) => {
+      Alert.alert(
+          "Supprimer la cotisation ?",
+          "Irréversible. L'historique sera effacé.",
+          [
+              { text: "Annuler", style: "cancel" },
+              { 
+                  text: "Supprimer", 
+                  style: "destructive",
+                  onPress: () => {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      deleteGoal(goalId);
+                      clearTransactions(goalId);
+                  } 
+              }
+          ]
+      );
   };
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>Ton chantier est vide, mon frère !</Text>
-      <Text style={styles.emptySubtitle}>
-        Commence ton premier projet et bâtis ton avenir 🏗️
-      </Text>
-    </View>
-  );
+  const renderRightActions = (progress, dragX, goalId) => {
+      return (
+          <TouchableOpacity 
+              style={styles.deleteAction}
+              onPress={() => handleDeleteGoal(goalId)}
+          >
+              <Ionicons name="trash-outline" size={32} color="#fff" />
+              <Text style={styles.deleteText}>Suppr.</Text>
+          </TouchableOpacity>
+      );
+  };
 
   return (
     <DirtBackground>
@@ -35,19 +50,25 @@ export default function HomeScreen() {
              data={goals}
              keyExtractor={(item) => item.id}
              renderItem={({ item }) => (
-                <GoalCard 
-                    goal={item} 
-                    onPress={() => router.push(`/goals/${item.id}`)} 
-                />
+                <Swipeable
+                    renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item.id)}
+                    containerStyle={styles.swipeContainer}
+                >
+                    <GoalCard 
+                        goal={item} 
+                        onPress={() => router.push(`/goals/${item.id}`)} 
+                    />
+                </Swipeable>
              )}
              contentContainerStyle={styles.listContent}
              showsVerticalScrollIndicator={false}
-             ListHeaderComponent={
-                <Text style={styles.headerTitle}>Mes Chantiers 🏗️</Text>
-             }
+             ListHeaderComponent={renderHeader}
            />
         ) : (
-            renderEmptyState()
+            <>
+                <View style={{ paddingHorizontal: Spacing.xl }}>{renderHeader()}</View>
+                {renderEmptyState()}
+            </>
         )}
 
         {/* Floating Action Button */}
@@ -65,6 +86,36 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ... (existing styles)
+  swipeContainer: {
+      marginBottom: Spacing.md,
+      backgroundColor: 'transparent',
+      // No overflow hidden to allow shadow/elevation of GoalCard if needed, but Swipeable usually handles it.
+  },
+  deleteAction: {
+      backgroundColor: '#ef4444',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 100,
+      height: '100%',
+      borderTopRightRadius: 16,
+      borderBottomRightRadius: 16,
+      // Adjust alignment with card margin if card has margin. 
+      // GoalCard usually has margin, so we might need to match it.
+      // GoalCard styles: marginBottom is handled by FlatList separator or item style? 
+      // Looking at `GoalCard`, it has `marginBottom: Spacing.md` usually? 
+      // Wait, let's assume GoalCard logic needs wrapper tweaks.
+      // Actually, Swipeable wraps the content. If Content has margin, swipe action might look weird.
+      // Better to remove margin from GoalCard and put it on Swipeable Container? 
+      // I'll stick to basic implementation and refine layout if needed.
+  },
+  deleteText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 12,
+      marginTop: 4,
+  },
+  // ... (rest of styles)
   container: {
     flex: 1,
     paddingTop: 60, // Space for status bar
@@ -73,12 +124,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingBottom: 100, // Space for FAB
   },
+  headerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.lg,
+  },
   headerTitle: {
       fontSize: 28,
       fontWeight: 'bold',
       color: Colors.text,
-      marginBottom: Spacing.lg,
       fontFamily: Typography.heading,
+  },
+  syncButton: {
+      padding: Spacing.sm,
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      borderRadius: 12,
   },
   emptyState: {
     flex: 1,

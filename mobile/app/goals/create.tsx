@@ -303,7 +303,7 @@ export default function CreateGoalScreen() {
 
   const renderStep3_Identity = () => (
     <View style={styles.stepContainer}>
-        <Text style={styles.label}>Nom du chantier</Text>
+        <Text style={styles.label}>Nom de la tontine</Text>
         <TextInput 
             style={styles.input} 
             placeholder="Ex: Ma Moto, Dot Mariage..." 
@@ -367,7 +367,7 @@ export default function CreateGoalScreen() {
         <View style={styles.footerAction}>
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
                 <Text style={styles.nextButtonText}>
-                    {step === 3 || (!linkToProject && step === 2) ? "Lancer le Chantier 🚀" : "Continuer"}
+                    {step === 3 || (!linkToProject && step === 2) ? "Lancer la Tontine 🚀" : "Continuer"}
                 </Text>
                 {step < 3 && (linkToProject || step === 1) && <Ionicons name="arrow-forward" size={20} color="#000" style={{marginLeft: 8}} />}
             </TouchableOpacity>

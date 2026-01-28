@@ -26,11 +26,88 @@ export default function GoalDetailScreen() {
     state.goals.find((g) => g.id === id)
   );
   
-  const [isSheetVisible, setSheetVisible] = useState(false);
+  
+  const [activeSheet, setActiveSheet] = useState<'none' | 'deposit' | 'debug'>('none');
   const [pendingAmount, setPendingAmount] = useState<number>(0);
-  // Safe Selection: Select raw state, filter in render with useMemo to avoid infinite loops
+
+  // Safe Selection
   const allTransactions = useTransactionStore((state) => state.transactions);
   const addTransaction = useTransactionStore((state) => state.addTransaction);
+  const clearTransactions = useTransactionStore((state) => state.clearTransactions);
+
+  // ... (memos)
+
+  // Seed Helper
+  const seedScenario = (type: 'happy' | 'rich' | 'urgent' | 'strike') => {
+      clearTransactions(goal.id); // Reset first
+      
+      const expected = TontineEngine.calculateExpectedBalance(goal);
+      let amountToDeposit = 0;
+
+      switch (type) {
+          case 'happy': 
+              amountToDeposit = expected; 
+              break;
+          case 'rich': 
+              amountToDeposit = expected + goal.brickAmount; 
+              break;
+          case 'urgent': 
+              amountToDeposit = Math.max(0, expected - (goal.brickAmount * 0.5)); 
+              break;
+          case 'strike': 
+              amountToDeposit = Math.max(0, expected - (goal.brickAmount * 2.5)); 
+              break;
+      }
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setActiveSheet('none');
+
+      // Small delay to ensure clear propagates before add
+      setTimeout(() => {
+        if (amountToDeposit > 0) {
+            addTransaction({
+                goalId: goal.id,
+                amount: amountToDeposit,
+                date: new Date().toISOString(),
+                type: 'deposit'
+            });
+            // Optional: Alert.alert("Debug", `Seeded: ${amountToDeposit}`);
+        }
+      }, 100);
+  };
+
+  const deleteGoal = useGoalStore((state: GoalState) => state.deleteGoal);
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Supprimer la cotisation ?",
+      "Attention, cette action est irréversible. Tout l'historique sera effacé.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Supprimer", 
+          style: "destructive", 
+          onPress: () => {
+            deleteGoal(goal.id);
+            clearTransactions(goal.id); // Good practice to clear transactions too
+            router.back();
+          }
+        }
+      ]
+    );
+    setActiveSheet('none');
+  };
+
+  const menuOptions: ActionSheetOption[] = [
+      { label: "🗑️  Supprimer la cotisation", onPress: handleDelete, color: 'red' },
+      // Debug Items below
+      { label: "🧪  Seed: À jour (Happy)", onPress: () => seedScenario('happy') },
+      { label: "😎  Seed: En Avance (Rich)", onPress: () => seedScenario('rich') },
+      { label: "😰  Seed: Retard (Urgent)", onPress: () => seedScenario('urgent') },
+      { label: "🛑  Seed: Grève (Strike)", onPress: () => seedScenario('strike') },
+      { label: "🧹  Reset Transactions", onPress: () => { clearTransactions(goal.id); setActiveSheet('none'); }, color: 'orange' },
+      { label: "Fermer", onPress: () => {}, isCancel: true }
+  ];
 
   const goalTransactions = useMemo(() => {
       if (!id) return [];
@@ -48,7 +125,7 @@ export default function GoalDetailScreen() {
     return (
       <DirtBackground>
         <View style={styles.center}>
-          <Text style={styles.errorText}>Chantier introuvable 🏗️</Text>
+          <Text style={styles.errorText}>Cotisation introuvable 🏗️</Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backLink}>Retour</Text>
           </TouchableOpacity>
@@ -68,13 +145,23 @@ export default function GoalDetailScreen() {
 
   const completedBricks = goal.brickAmount > 0 ? Math.floor(effectiveTotal / goal.brickAmount) : 0;
 
-  // Kulu Message
+  // Kulu Message & Mood
   let kuluMessage = "Tout est en ordre chef ! 🏗️";
   let isAction = false;
-  
+  let kuluMood: 'happy' | 'urgent' | 'strike' | 'rich' = 'happy';
+
   if (missingAmount > 0) {
-      kuluMessage = `Il manque ${missingAmount.toLocaleString()} F pour être à jour !`;
+      if (missingAmount > goal.brickAmount) {
+          kuluMood = 'strike';
+          kuluMessage = "ON FAIT GRÈVE !! 😤\n(Trop de retard)";
+      } else {
+          kuluMood = 'urgent';
+          kuluMessage = `Pst ! Il manque ${missingAmount.toLocaleString()} F`;
+      }
       isAction = true;
+  } else if (effectiveTotal > expectedTotal) {
+      kuluMood = 'rich';
+      kuluMessage = "En avance sur le planning ! 😎";
   }
 
   const confirmDeposit = (proofUri?: string) => {
@@ -89,9 +176,9 @@ export default function GoalDetailScreen() {
   };
 
   const triggerDeposit = (amount: number) => {
-     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Selection);
+     Haptics.selectionAsync();
      setPendingAmount(amount);
-     setSheetVisible(true);
+     setActiveSheet('deposit');
   };
 
   const depositOptions: ActionSheetOption[] = [
@@ -100,6 +187,7 @@ export default function GoalDetailScreen() {
           onPress: async () => {
               const uri = await ProofCaptureService.takePhoto();
               if (uri) confirmDeposit(uri);
+              setActiveSheet('none');
           },
           color: Colors.text
       },
@@ -108,13 +196,14 @@ export default function GoalDetailScreen() {
           onPress: async () => {
               const uri = await ProofCaptureService.pickImage();
               if (uri) confirmDeposit(uri);
+              setActiveSheet('none');
           },
           color: Colors.text
       },
       {
           label: "⚡  Déposer sans preuve",
-          onPress: () => confirmDeposit(),
-          color: Colors.primary // Highlight "Quick" option? Or keep neutral. Let's make it primary.
+          onPress: () => { confirmDeposit(); setActiveSheet('none'); },
+          color: Colors.primary 
       },
       {
           label: "Annuler",
@@ -122,10 +211,10 @@ export default function GoalDetailScreen() {
           isCancel: true
       }
   ];
-
+  
+  
   return (
     <DirtBackground>
-      {/* ... Existing Structure ... */}
       <Stack.Screen options={{ headerShown: false }} />
       
       {/* Header */}
@@ -134,10 +223,25 @@ export default function GoalDetailScreen() {
              <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{goal.name}</Text>
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity style={styles.menuButton} onPress={() => setActiveSheet('debug')}>
              <Ionicons name="ellipsis-vertical" size={24} color={Colors.text} />
         </TouchableOpacity>
       </View>
+
+      {/* Sheets */}
+      <CustomActionSheet 
+        visible={activeSheet === 'deposit'} 
+        onClose={() => setActiveSheet('none')}
+        title={`Déposer ${pendingAmount.toLocaleString()} F ?`}
+        options={depositOptions}
+      />
+
+       <CustomActionSheet 
+        visible={activeSheet === 'debug'} 
+        onClose={() => setActiveSheet('none')}
+        title="Gestion & Debug"
+        options={menuOptions}
+      />
 
       <View style={styles.hintSection}>
           <View style={styles.bubbleContainer}>
@@ -149,7 +253,7 @@ export default function GoalDetailScreen() {
               />
           </View>
           <View style={styles.mascotContainer}>
-              <KuluMascot mood={missingAmount > 0 ? 'urgent' : 'happy'} size={70} />
+              <KuluMascot mood={kuluMood} size={70} />
           </View>
       </View>
 
@@ -198,12 +302,6 @@ export default function GoalDetailScreen() {
 
       </ScrollView>
 
-      <CustomActionSheet 
-        visible={isSheetVisible} 
-        onClose={() => setSheetVisible(false)}
-        title={`Déposer ${pendingAmount.toLocaleString()} F ?`}
-        options={depositOptions}
-      />
     </DirtBackground>
   );
 }
