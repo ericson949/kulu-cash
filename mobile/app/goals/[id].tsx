@@ -27,7 +27,7 @@ export default function GoalDetailScreen() {
   );
   
   
-  const [activeSheet, setActiveSheet] = useState<'none' | 'deposit' | 'debug'>('none');
+  const [activeSheet, setActiveSheet] = useState<'none' | 'deposit' | 'debug' | 'delete'>('none');
   const [pendingAmount, setPendingAmount] = useState<number>(0);
 
   // Safe Selection
@@ -35,7 +35,7 @@ export default function GoalDetailScreen() {
   const addTransaction = useTransactionStore((state) => state.addTransaction);
   const clearTransactions = useTransactionStore((state) => state.clearTransactions);
 
-  // ... (memos)
+
 
   // Seed Helper
   const seedScenario = (type: 'happy' | 'rich' | 'urgent' | 'strike') => {
@@ -78,24 +78,16 @@ export default function GoalDetailScreen() {
 
   const deleteGoal = useGoalStore((state: GoalState) => state.deleteGoal);
 
+  const confirmDelete = () => {
+     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+     deleteGoal(goal.id);
+     clearTransactions(goal.id); 
+     setActiveSheet('none');
+     router.back();
+  };
+
   const handleDelete = () => {
-    Alert.alert(
-      "Supprimer la cotisation ?",
-      "Attention, cette action est irréversible. Tout l'historique sera effacé.",
-      [
-        { text: "Annuler", style: "cancel" },
-        { 
-          text: "Supprimer", 
-          style: "destructive", 
-          onPress: () => {
-            deleteGoal(goal.id);
-            clearTransactions(goal.id); // Good practice to clear transactions too
-            router.back();
-          }
-        }
-      ]
-    );
-    setActiveSheet('none');
+    setActiveSheet('delete');
   };
 
   const menuOptions: ActionSheetOption[] = [
@@ -107,6 +99,11 @@ export default function GoalDetailScreen() {
       { label: "🛑  Seed: Grève (Strike)", onPress: () => seedScenario('strike') },
       { label: "🧹  Reset Transactions", onPress: () => { clearTransactions(goal.id); setActiveSheet('none'); }, color: 'orange' },
       { label: "Fermer", onPress: () => {}, isCancel: true }
+  ];
+
+  const deleteOptions: ActionSheetOption[] = [
+      { label: "🗑️  Confirmer la suppression", onPress: confirmDelete, color: '#ef4444' },
+      { label: "Annuler", onPress: () => {}, isCancel: true }
   ];
 
   const goalTransactions = useMemo(() => {
@@ -241,6 +238,13 @@ export default function GoalDetailScreen() {
         onClose={() => setActiveSheet('none')}
         title="Gestion & Debug"
         options={menuOptions}
+      />
+
+       <CustomActionSheet 
+        visible={activeSheet === 'delete'} 
+        onClose={() => setActiveSheet('none')}
+        title="Supprimer cette cotisation ? (Irréversible)"
+        options={deleteOptions}
       />
 
       <View style={styles.hintSection}>

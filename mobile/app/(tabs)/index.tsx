@@ -1,36 +1,102 @@
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useTransactionStore } from '@/src/features/transactions/domain/transaction.store';
+import { CustomActionSheet, ActionSheetOption } from '@/src/shared/components/CustomActionSheet';
+import { useState } from 'react';
 
-// ... (existing imports)
+import React from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Platform, FlatList, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { DirtBackground } from '@/src/shared/components/DirtBackground';
+import { Colors, Spacing, Typography } from '@/src/shared/theme/tokens';
+import { useGoalStore, GoalState } from '@/src/features/goals/domain/goal.store';
+import { GoalCard } from '@/src/features/goals/presentation/components/GoalCard';
+import { Ionicons } from '@expo/vector-icons';
+import { SyncService } from '@/src/features/sync/domain/sync.service';
+
 
 export default function HomeScreen() {
   const router = useRouter();
   const goals = useGoalStore((state: GoalState) => state.goals);
   const deleteGoal = useGoalStore((state: GoalState) => state.deleteGoal);
   const clearTransactions = useTransactionStore((state) => state.clearTransactions);
+  
+  const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
 
-  // ... (handleSync, handleNewProject, renderHeader, renderEmptyState)
-
-  const handleDeleteGoal = (goalId: string) => {
+  const handleSync = () => {
       Alert.alert(
-          "Supprimer la cotisation ?",
-          "Irréversible. L'historique sera effacé.",
+          "Cloud Sync ☁️",
+          "Sauvegarder ou Restaurer tes chantiers ?",
           [
               { text: "Annuler", style: "cancel" },
               { 
-                  text: "Supprimer", 
+                  text: "📥 RESTAURER", 
                   style: "destructive",
-                  onPress: () => {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                      deleteGoal(goalId);
-                      clearTransactions(goalId);
+                  onPress: async () => {
+                      const success = await SyncService.pullRestore();
+                      if (success) Alert.alert("Succès", "Chantiers récupérés !");
+                      else Alert.alert("Erreur", "Aucune sauvegarde trouvée.");
+                  }
+              },
+              { 
+                  text: "📤 SAUVEGARDER", 
+                  onPress: async () => {
+                      const success = await SyncService.pushBackup();
+                      if (success) Alert.alert("Succès", "Données sécurisées dans le cloud !");
                   } 
               }
           ]
       );
   };
 
+
+
+  const renderHeader = () => (
+      <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Mes Cotisations 💸</Text>
+          <TouchableOpacity onPress={handleSync} style={styles.syncButton}>
+              <Ionicons name="cloud-upload-outline" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+      </View>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyTitle}>Aucune cotisation en cours</Text>
+      <Text style={styles.emptySubtitle}>
+        Lance ton premier objectif d'épargne ! 🚀
+      </Text>
+    </View>
+  );
+
+  const handleDeleteGoal = (goalId: string) => {
+      setDeletingGoalId(goalId);
+  };
+
+  const confirmDelete = () => {
+    if (!deletingGoalId) return;
+    
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    deleteGoal(deletingGoalId);
+    clearTransactions(deletingGoalId);
+    setDeletingGoalId(null);
+  };
+
+  const deleteOptions: ActionSheetOption[] = [
+      { 
+          label: "🗑️  Confirmer la suppression", 
+          onPress: confirmDelete, 
+          color: '#ef4444' // Red
+      },
+      { 
+          label: "Annuler", 
+          onPress: () => {}, 
+          isCancel: true 
+      }
+  ];
+
   const renderRightActions = (progress, dragX, goalId) => {
+      // ... (same as before)
       return (
           <TouchableOpacity 
               style={styles.deleteAction}
@@ -53,6 +119,9 @@ export default function HomeScreen() {
                 <Swipeable
                     renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item.id)}
                     containerStyle={styles.swipeContainer}
+                    friction={2}
+                    overshootFriction={4}
+                    rightThreshold={40}
                 >
                     <GoalCard 
                         goal={item} 
@@ -71,15 +140,15 @@ export default function HomeScreen() {
             </>
         )}
 
-        {/* Floating Action Button */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={handleNewProject}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.fabIcon}>➕</Text>
-          <Text style={styles.fabText}>Nouveau Projet</Text>
-        </TouchableOpacity>
+
+
+        {/* Delete Confirmation Sheet */}
+        <CustomActionSheet 
+            visible={!!deletingGoalId}
+            onClose={() => setDeletingGoalId(null)}
+            title="Supprimer cette cotisation ? (Irréversible)"
+            options={deleteOptions}
+        />
       </View>
     </DirtBackground>
   );
@@ -122,7 +191,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: Spacing.xl,
-    paddingBottom: 100, // Space for FAB
+    paddingBottom: 150, // Increased for Tab Bar clearance
   },
   headerContainer: {
       flexDirection: 'row',
@@ -162,30 +231,5 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontFamily: Typography.body,
   },
-  fab: {
-    position: 'absolute',
-    bottom: Spacing.xl * 2,
-    right: Spacing.xl,
-    backgroundColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  fabIcon: {
-    fontSize: 20,
-    marginRight: Spacing.sm,
-  },
-  fabText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16,
-    fontFamily: Typography.heading,
-  },
+
 });

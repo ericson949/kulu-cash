@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { RectButton } from 'react-native-gesture-handler';
 import { Colors, Spacing, Typography } from '@/src/shared/theme/tokens';
 import { SavingsGoal } from '../../domain/goal.store';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,12 +34,10 @@ export const GoalCard = ({ goal, onPress }: GoalCardProps) => {
   if (goal.frequency === 'daily') periodLabel = 'Jour';
 
   // Calculate progress (Mocked for now until Transactions are implemented)
-  // For MVP Visual: If dueAmount > 0, we can imagine progress based on time?
-  // Let's keep it simple: Real progress requires the Transaction Store.
-  const progress = 0; 
+  const progress = 0;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
+    <RectButton style={styles.card} onPress={onPress}>
       <View style={styles.imageContainer}>
         <Image source={imageSource} style={styles.image} resizeMode="contain" />
       </View>
@@ -69,7 +68,7 @@ export const GoalCard = ({ goal, onPress }: GoalCardProps) => {
         </View>
         <Text style={styles.progressText}>{progress}% complété</Text>
       </View>
-    </TouchableOpacity>
+    </RectButton>
   );
 };
 
