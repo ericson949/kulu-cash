@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import '@/i18n'; // Initialize i18n
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -45,33 +46,17 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-import { initializeAuthListener, useAuthStore } from '@/src/features/auth/domain/auth.service';
-
-// ... (existing imports)
-
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-// ...
-
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
-  useEffect(() => {
-     initializeAuthListener();
-     // Silently try to sign in anonymously if not already
-     useAuthStore.getState().signInAnonymous();
-  }, []);
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="goals/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="goals/create" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="tontine/create" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="tontine/custom-goal" options={{ headerShown: false, presentation: 'modal' }} />
+      </Stack>
+    </ThemeProvider>
   );
 }
