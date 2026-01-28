@@ -4,6 +4,7 @@ export default {
     close: "Close",
     help: "Help",
     continue: "CONTINUE",
+    nextStep: "NEXT STEP",
     offlineNotice: "Goal selection works <bold>offline</bold>. Your preferences will sync when you're back online.",
   },
   tabs: {
@@ -12,6 +13,15 @@ export default {
     add: "Add",
     inbox: "Inbox",
     profile: "Profile",
+  },
+  days: {
+    monday: "Monday",
+    tuesday: "Tuesday",
+    wednesday: "Wednesday",
+    thursday: "Thursday",
+    friday: "Friday",
+    saturday: "Saturday",
+    sunday: "Sunday"
   },
   createTontine: {
     title: "New Tontine",
@@ -38,6 +48,46 @@ export default {
       iconLabel: "Choose an Icon",
       colorLabel: "Pick a Theme Color",
       save: "Save Category"
-    }
+    },
+    step2: 'STEP 2 OF 4',
+    step2Title: 'Logic & Timing',
+    contributionType: {
+        title: 'Contribution Type',
+        subtitle: 'Choose how members will contribute',
+        fixed: 'Fixed',
+        variable: 'Type A',
+        cumulative: 'Type B'
+    },
+    duration: {
+        title: 'Duration & Bouts',
+        subtitle: 'Set the timeframe and review calculation',
+        startDate: 'Start Date',
+        endDate: 'End Date'
+    },
+    cycle: {
+        label: 'Calculated Cycle',
+        bouts: 'Bouts',
+        bout: 'bout',
+        frequency: 'Frequency',
+        contributionDay: 'Contribution Day'
+    },
+    frequency: {
+        weekly: 'Weekly'
+    },
+    pastDate: {
+        title: 'Start Date in the Past',
+        desc: 'Since you started in the past, how much have you saved so far compared to the expected amount?',
+        currentBalance: 'Current Savings Balance',
+        expected: 'Expected',
+        actual: 'Actual',
+        behind: 'Behind'
+    },
+    catchUp: {
+        title: 'Catch-up Strategy',
+        info: 'Your future contributions will be slightly increased to reach your goal on time.',
+        original: 'Original Amount',
+        adjusted: 'Adjusted Turn'
+    },
+
   }
 };

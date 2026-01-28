@@ -30,16 +30,7 @@ export default function CustomGoalScreen() {
 
   return (
     <View style={styles.container}>
-        {/* HEADER */}
-        <SafeAreaView edges={['top']} style={styles.header}>
-            <View style={styles.headerContent}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-                    <MaterialIcons name="arrow-back-ios" size={20} color="#FFF" style={{ paddingLeft: 6 }} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{t('createTontine.customGoal.headerTitle')}</Text>
-                <View style={[styles.iconBtn, { opacity: 0 }]} /> 
-            </View>
-        </SafeAreaView>
+
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* HERRO / MASCOT */}
@@ -168,6 +159,46 @@ const styles = StyleSheet.create({
       color: '#FFF',
       fontSize: 18,
       fontWeight: 'bold',
+  },
+  
+  progressSection: {
+      paddingHorizontal: 24,
+      paddingBottom: 20,
+      gap: 8,
+  },
+  progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  stepIndicator: {
+      color: Colors.primary,
+      fontSize: 12,
+      fontWeight: '900',
+      letterSpacing: 1,
+  },
+  stepTitle: {
+      color: '#9cbaa6',
+      fontSize: 12,
+      fontWeight: 'bold',
+  },
+  progressTrack: {
+      flexDirection: 'row',
+      height: 6,
+      gap: 6,
+  },
+  progressSegment: {
+      flex: 1,
+      borderRadius: 3,
+      backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  progressActive: {
+      backgroundColor: Colors.primary,
+      shadowColor: Colors.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 8,
+      elevation: 5,
   },
   
   scrollContent: {

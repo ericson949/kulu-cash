@@ -54,8 +54,7 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="tontine/create" options={{ headerShown: false, presentation: 'modal' }} />
-        <Stack.Screen name="tontine/custom-goal" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="tontine" options={{ headerShown: false, presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
   );

@@ -33,33 +33,6 @@ export default function CreateTontineScreen() {
         {/* In a real app we might use an SVG or Image background. 
             For now, just solid dark background matching input #102216 */}
             
-        {/* HEADER */}
-        <SafeAreaView edges={['top']} style={styles.header}>
-            <View style={styles.headerContent}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-                    <MaterialIcons name="close" size={24} color="#FFF" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{t('createTontine.title')}</Text>
-                <TouchableOpacity style={styles.iconBtn}>
-                    <MaterialIcons name="help-outline" size={24} color="#FFF" />
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
-
-        {/* PROGRESS BAR */}
-        <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-                <Text style={styles.stepIndicator}>{t('createTontine.step1')}</Text>
-                <Text style={styles.stepTitle}>{t('createTontine.step1Title')}</Text>
-            </View>
-            <View style={styles.progressTrack}>
-                <View style={[styles.progressSegment, styles.progressActive]} />
-                <View style={styles.progressSegment} />
-                <View style={styles.progressSegment} />
-                <View style={styles.progressSegment} />
-            </View>
-        </View>
-
         <View style={styles.fixedContent}>
             {/* HERRO TEXT */}
             <View style={styles.heroSection}>
@@ -134,7 +107,11 @@ export default function CreateTontineScreen() {
                 </Text>
              </View>
              
-             <TouchableOpacity style={styles.continueBtn} activeOpacity={0.9}>
+             <TouchableOpacity 
+                style={styles.continueBtn} 
+                activeOpacity={0.9}
+                onPress={() => router.push('/tontine/setup-logic')}
+             >
                  <Text style={styles.continueText}>{t('common.continue')}</Text>
                  <MaterialIcons name="arrow-forward" size={22} color={Colors.background} style={{ fontWeight: '900' }} />
              </TouchableOpacity>

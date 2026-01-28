@@ -4,6 +4,7 @@ export default {
     close: "Fermer",
     help: "Aide",
     continue: "CONTINUER",
+    nextStep: "ÉTAPE SUIVANTE",
     offlineNotice: "La sélection d'objectif fonctionne <bold>hors ligne</bold>. Vos préférences seront synchronisées une fois en ligne.",
   },
   tabs: {
@@ -12,6 +13,15 @@ export default {
     add: "Ajouter",
     inbox: "Messagerie",
     profile: "Profil",
+  },
+  days: {
+    monday: "Lundi",
+    tuesday: "Mardi",
+    wednesday: "Mercredi",
+    thursday: "Jeudi",
+    friday: "Vendredi",
+    saturday: "Samedi",
+    sunday: "Dimanche"
   },
   createTontine: {
     title: "Nouvelle Tontine",
@@ -38,6 +48,46 @@ export default {
       iconLabel: "Choisir une icône",
       colorLabel: "Choisir une couleur",
       save: "Enregistrer la catégorie"
-    }
+    },
+    step2: 'ÉTAPE 2 SUR 4',
+    step2Title: 'Logique & Timing',
+    contributionType: {
+        title: 'Type de Contribution',
+        subtitle: 'Choisissez comment les membres contribuent',
+        fixed: 'Fixe',
+        variable: 'Type A',
+        cumulative: 'Type B'
+    },
+    duration: {
+        title: 'Durée & Tours',
+        subtitle: 'Définissez la période et le calcul',
+        startDate: 'Date de début',
+        endDate: 'Date de fin'
+    },
+    cycle: {
+        label: 'Cycle Calculé',
+        bouts: 'Tours',
+        bout: 'tour',
+        frequency: 'Fréquence',
+        contributionDay: 'Jour de cotisation'
+    },
+    frequency: {
+        weekly: 'Hebdomadaire'
+    },
+    pastDate: {
+        title: 'Date de début passée',
+        desc: 'Puisque vous avez commencé dans le passé, combien avez-vous économisé par rapport au montant prévu ?',
+        currentBalance: 'Solde actuel',
+        expected: 'Attendu',
+        actual: 'Réel',
+        behind: 'Retard'
+    },
+    catchUp: {
+        title: 'Stratégie de rattrapage',
+        info: 'Vos futures contributions seront légèrement augmentées pour atteindre votre objectif à temps.',
+        original: 'Montant Original',
+        adjusted: 'Tour Ajusté'
+    },
+
   }
 };
