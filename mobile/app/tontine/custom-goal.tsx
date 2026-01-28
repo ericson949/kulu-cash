@@ -34,7 +34,7 @@ export default function CustomGoalScreen() {
         <SafeAreaView edges={['top']} style={styles.header}>
             <View style={styles.headerContent}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-                    <MaterialIcons name="arrow-back-ios" size={20} color="#FFF" />
+                    <MaterialIcons name="arrow-back-ios" size={20} color="#FFF" style={{ paddingLeft: 6 }} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{t('createTontine.customGoal.headerTitle')}</Text>
                 <View style={[styles.iconBtn, { opacity: 0 }]} /> 
@@ -90,11 +90,14 @@ export default function CustomGoalScreen() {
                                             : { backgroundColor: '#1b271f', borderColor: '#3a5543', borderWidth: 1 }
                                     ]}
                                 >
-                                    <MaterialIcons 
-                                        name={icon as any} 
-                                        size={28} 
-                                        color={isSelected ? Colors.background : '#FFF'} 
-                                    />
+                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                        <MaterialIcons 
+                                            name={icon as any} 
+                                            size={28} 
+                                            color={isSelected ? Colors.background : '#FFF'}
+                                            style={{ textAlign: 'center' }}
+                                        />
+                                    </View>
                                 </TouchableOpacity>
                             );
                         })}
@@ -253,6 +256,8 @@ const styles = StyleSheet.create({
   colorRow: {
       gap: 16,
       paddingRight: 16,
+      paddingLeft: 4, // Add padding to avoid clipping selected border
+      paddingVertical: 4, // Add padding to avoid clipping selected border
   },
   colorItem: {
       width: 40,
